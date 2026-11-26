@@ -4,12 +4,14 @@ import type { AppSettings } from '../lib/settings';
 import type { Airfield } from '../lib/airfields';
 import { fmtDuration } from '../lib/geo';
 import AirfieldSearch from './AirfieldSearch';
+import InstructorPicker from './InstructorPicker';
+import AircraftArt from './AircraftArt';
 
 const PHASE_TXT = { GROUND: 'Am Boden', AIRBORNE: 'In der Luft', ROLLOUT: 'Ausrollen' } as const;
 
 export default function FlyView({ recorder, rec, settings, onOpenNav, onShowLog }: { recorder: Recorder; rec: RecorderState; settings: AppSettings; onOpenNav: () => void; onShowLog: () => void }) {
   const [reg, setReg] = useState(recorder.aircraftReg || settings.defaultAircraft);
-  const [crew, setCrew] = useState(recorder.crew);
+  const [crew, setCrew] = useState({ ...recorder.crew, instructor: recorder.crew.instructor || settings.defaultInstructor });
   const [simField, setSimField] = useState<Airfield | null>(null);
   const [pickSim, setPickSim] = useState(false);
   const [speedup, setSpeedup] = useState(10);
@@ -70,6 +72,9 @@ export default function FlyView({ recorder, rec, settings, onOpenNav, onShowLog 
         <div className="err">Letzte Aufzeichnung enthielt keinen Start – kein Eintrag angelegt.</div>
       )}
 
+      <div className="fly-grid">
+      <div className="fly-main">
+      <div className="fly-art"><AircraftArt ac={ac} /></div>
       <p className="eyebrow" style={{ marginTop: 8 }}>Luftfahrzeug</p>
       <div className="ac-select">
         <span className="reg">{reg || '—'}</span>
@@ -93,10 +98,7 @@ export default function FlyView({ recorder, rec, settings, onOpenNav, onShowLog 
           </select>
         </label>
         {crew.role === 'DUAL' && (
-          <label>
-            Fluglehrer
-            <input value={crew.instructor} placeholder="Name" onChange={(e) => setCrew({ ...crew, instructor: e.target.value })} />
-          </label>
+          <InstructorPicker value={crew.instructor} instructors={settings.instructors} onChange={(v) => setCrew({ ...crew, instructor: v })} />
         )}
         {crew.role === 'FI' && (
           <label>
@@ -111,8 +113,9 @@ export default function FlyView({ recorder, rec, settings, onOpenNav, onShowLog 
         Aufzeichnung starten
       </button>
       <p className="hint">Vor dem Rollen starten.</p>
+      </div>
 
-      <div style={{ marginTop: 18, borderTop: '1.5px solid var(--rule)' }}>
+      <div className="fly-side" style={{ borderTop: '1.5px solid var(--rule)' }}>
         <details className="section">
           <summary>So funktioniert die Erkennung</summary>
           <div className="body">
@@ -170,6 +173,7 @@ export default function FlyView({ recorder, rec, settings, onOpenNav, onShowLog 
             <button className="big" onClick={onOpenNav}>Karte öffnen</button>
           </div>
         </details>
+      </div>
       </div>
     </>
   );

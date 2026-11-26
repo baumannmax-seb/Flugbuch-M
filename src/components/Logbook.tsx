@@ -5,21 +5,19 @@ import { exportCsv } from '../lib/export';
 import type { AppSettings } from '../lib/settings';
 import EntryForm, { emptyEntry } from './EntryForm';
 import CsvImportSheet from './CsvImportSheet';
+import AircraftArt, { defaultAircraft } from './AircraftArt';
 
 const MONTHS = ['Januar', 'Februar', 'März', 'April', 'Mai', 'Juni', 'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember'];
 
-/** Zeichnung + Beschriftung des Standard-Luftfahrzeugs */
+/** Zeichnung des Standard-Luftfahrzeugs, Kennzeichen auf dem Rumpf, Muster darunter */
 export function AircraftHero({ settings }: { settings: AppSettings }) {
-  const ac = settings.aircraft.find((a) => a.reg === settings.defaultAircraft) ?? settings.aircraft[0];
+  const ac = defaultAircraft(settings);
   return (
     <>
-      <img src="./aircraft.png" alt="" style={{ width: '100%', maxWidth: 520, display: 'block', margin: '0 auto' }} />
-      {ac && (
+      <AircraftArt ac={ac ?? { reg: '', type: '' }} />
+      {ac?.type && (
         <div className="plane-caption">
-          <span>
-            {ac.type ? `${ac.type} · ` : ''}
-            {ac.reg}
-          </span>
+          <span>{ac.type}</span>
         </div>
       )}
     </>
@@ -63,16 +61,20 @@ export default function Logbook({
 
       {entries.length === 0 ? (
         <div className="hero">
-          <AircraftHero settings={settings} />
+          <div>
+            <AircraftHero settings={settings} />
+          </div>
+          <div>
           <h2>Dein erster Flug</h2>
           <p>Starte eine GPS-Aufzeichnung – Start, Landungen und Touch-and-Gos werden automatisch erkannt und hier eingetragen.</p>
           <button className="primary big" onClick={onRecord}>
             <span className="rec-dot plain" />
             Flug aufzeichnen
           </button>
-          <div style={{ marginTop: 14, display: 'flex', gap: 28, justifyContent: 'center' }}>
+          <div className="hero-links" style={{ marginTop: 14, display: 'flex', gap: 28, justifyContent: 'center' }}>
             <button className="link" onClick={newEntry}>Manuell eintragen</button>
             <button className="link" onClick={() => setImporting(true)}>Flugbuch importieren</button>
+          </div>
           </div>
         </div>
       ) : (

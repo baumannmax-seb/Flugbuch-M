@@ -37,7 +37,7 @@ export default function Stats({ entries }: { entries: LogEntry[] }) {
   const total = sum(entries);
 
   return (
-    <>
+    <div className="stats-grid">
       <div className="kpis">
         <div className="kpi"><div className="v">{fmtDuration(total.min * 60000)}</div><div className="l">Gesamt h</div></div>
         <div className="kpi"><div className="v">{total.n}</div><div className="l">Flüge</div></div>
@@ -104,6 +104,6 @@ export default function Stats({ entries }: { entries: LogEntry[] }) {
           </tbody>
         </table>
       </div>
-    </>
+    </div>
   );
 }

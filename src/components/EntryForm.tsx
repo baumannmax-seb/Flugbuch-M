@@ -4,6 +4,7 @@ import { fmtDuration } from '../lib/geo';
 import { exportGpx } from '../lib/export';
 import type { AppSettings } from '../lib/settings';
 import TrackMap from './TrackMap';
+import InstructorPicker from './InstructorPicker';
 
 const toDateInput = (t: number) => {
   const d = new Date(t);
@@ -107,7 +108,7 @@ export default function EntryForm({ initial, settings, isNew = false, onClose }:
           </label>
           <label>
             Funktion
-            <select value={e.role} onChange={(ev) => set('role', ev.target.value as LogEntry['role'])}>
+            <select value={e.role} onChange={(ev) => { const role = ev.target.value as LogEntry['role']; setE((p) => ({ ...p, role, instructor: role === 'DUAL' ? p.instructor || settings.defaultInstructor : p.instructor })); }}>
               <option value="PIC">PIC</option>
               <option value="DUAL">Schulung (Dual)</option>
               <option value="FI">Fluglehrer (FI)</option>
@@ -157,10 +158,7 @@ export default function EntryForm({ initial, settings, isNew = false, onClose }:
             <input list="name-list" value={e.pic} onChange={(ev) => set('pic', ev.target.value)} />
           </label>
           {e.role === 'DUAL' && (
-            <label>
-              Fluglehrer
-              <input list="name-list" value={e.instructor ?? ''} placeholder="Name FI" onChange={(ev) => set('instructor', ev.target.value)} />
-            </label>
+            <InstructorPicker value={e.instructor ?? ''} instructors={settings.instructors} onChange={(v) => set('instructor', v)} />
           )}
           {e.role === 'FI' && (
             <label>

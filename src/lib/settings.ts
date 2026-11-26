@@ -1,9 +1,23 @@
 import { db } from './db';
 import { DEFAULT_SETTINGS, type DetectorSettings } from './flightDetector';
 
+export interface AircraftCfg {
+  reg: string;
+  type: string;
+  /** Zeichnung (z.B. 'wt9'), 'custom:<id>' für eigenes Foto, 'none' oder leer = automatisch */
+  image?: string;
+}
+
+export interface Instructor {
+  name: string;
+  license?: string;
+}
+
 export interface AppSettings {
   pilotName: string;
-  aircraft: { reg: string; type: string }[];
+  aircraft: AircraftCfg[];
+  instructors: Instructor[];
+  defaultInstructor: string;
   defaultAircraft: string; // reg
   detector: Omit<DetectorSettings, 'fieldElevationFt'>;
   /** Grundkarte: 'topo' | 'osm' | 'custom' | 'mbt:<id>' */
@@ -19,6 +33,8 @@ export interface AppSettings {
 export const DEFAULT_APP_SETTINGS: AppSettings = {
   pilotName: '',
   aircraft: [],
+  instructors: [],
+  defaultInstructor: '',
   defaultAircraft: '',
   detector: { ...DEFAULT_SETTINGS },
   mapLayer: 'topo',

@@ -1,23 +1,13 @@
-import { useState } from 'react';
 import { db, type LogEntry, type Track } from '../lib/db';
 import { exportBackup } from '../lib/export';
 import { DEFAULT_SETTINGS } from '../lib/flightDetector';
 import type { AppSettings } from '../lib/settings';
 import MapSettings from './MapSettings';
+import { AircraftSettings, InstructorSettings } from './FleetSettings';
 
 export default function SettingsView({ settings, onChange, onDataChanged }: { settings: AppSettings; onChange: (s: AppSettings) => void; onDataChanged: () => void }) {
-  const [reg, setReg] = useState('');
-  const [type, setType] = useState('');
   const det = settings.detector;
   const setDet = (k: keyof typeof det, v: number) => onChange({ ...settings, detector: { ...det, [k]: v } });
-
-  const addAc = () => {
-    if (!reg.trim()) return;
-    const ac = { reg: reg.trim().toUpperCase(), type: type.trim() };
-    onChange({ ...settings, aircraft: [...settings.aircraft.filter((a) => a.reg !== ac.reg), ac], defaultAircraft: settings.defaultAircraft || ac.reg });
-    setReg('');
-    setType('');
-  };
 
   const backup = async () => {
     const entries = await db.listEntries();
@@ -47,7 +37,7 @@ export default function SettingsView({ settings, onChange, onDataChanged }: { se
   );
 
   return (
-    <>
+    <div className="settings-grid">
       <div className="card">
         <h2>Pilot</h2>
         <label>
@@ -56,25 +46,8 @@ export default function SettingsView({ settings, onChange, onDataChanged }: { se
         </label>
       </div>
 
-      <div className="card">
-        <h2>Luftfahrzeuge</h2>
-        {settings.aircraft.map((a) => (
-          <div key={a.reg} className="row" style={{ marginBottom: 8 }}>
-            <div>
-              <b>{a.reg}</b> {a.type} {settings.defaultAircraft === a.reg && <span className="badge">Standard</span>}
-            </div>
-            {settings.defaultAircraft !== a.reg && (
-              <button style={{ flex: '0 0 auto' }} onClick={() => onChange({ ...settings, defaultAircraft: a.reg })}>Standard</button>
-            )}
-            <button style={{ flex: '0 0 auto' }} className="danger" onClick={() => onChange({ ...settings, aircraft: settings.aircraft.filter((x) => x.reg !== a.reg) })}>✕</button>
-          </div>
-        ))}
-        <div className="row">
-          <input placeholder="D-MABC" value={reg} onChange={(e) => setReg(e.target.value)} />
-          <input placeholder="Muster, z.B. C42" value={type} onChange={(e) => setType(e.target.value)} />
-          <button style={{ flex: '0 0 auto' }} onClick={addAc}>＋</button>
-        </div>
-      </div>
+      <AircraftSettings settings={settings} onChange={onChange} />
+      <InstructorSettings settings={settings} onChange={onChange} />
 
       <MapSettings settings={settings} onChange={onChange} />
 
@@ -106,11 +79,11 @@ export default function SettingsView({ settings, onChange, onDataChanged }: { se
           </label>
         </div>
       </div>
-      <p className="small muted" style={{ textAlign: 'center' }}>
-        Flugbuch M · Draft v0.1 · Flugplatzdaten: OurAirports (Public Domain) · Karten © OpenStreetMap / OpenTopoMap / openAIP
+      <p className="small muted settings-foot" style={{ textAlign: 'center' }}>
+        Platzrunde · Draft v0.2 · Flugplatzdaten: OurAirports (Public Domain) · Karten © OpenStreetMap / OpenTopoMap / openAIP
         <br />
         Kein zugelassenes Navigationsgerät – nur zur Unterstützung.
       </p>
-    </>
+    </div>
   );
 }
