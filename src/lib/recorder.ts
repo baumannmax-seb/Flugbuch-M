@@ -8,6 +8,7 @@ import { db, uid, type LogEntry } from './db';
 import { nearestAirfield } from './airfields';
 import type { AppSettings } from './settings';
 import { buildScenario } from './simulator';
+import { watchLocation } from './native';
 
 export interface RecorderState {
   active: boolean;
@@ -36,7 +37,7 @@ const fieldElev = (lat: number, lon: number) => nearestAirfield(lat, lon, 3000)?
 export class Recorder {
   private listeners = new Set<Listener>();
   private detector: FlightDetector | null = null;
-  private watchId: number | null = null;
+  private stopWatch: (() => void) | null = null;
   private simTimer: number | null = null;
   private sessionId = '';
   private lastPersist = 0;
@@ -90,26 +91,15 @@ export class Recorder {
   }
 
   private startGps() {
-    if (!('geolocation' in navigator)) {
-      this.emit({ error: 'Kein GPS verfügbar' });
-      return;
-    }
-    this.watchId = navigator.geolocation.watchPosition(
-      (pos) => {
-        const c = pos.coords;
-        this.onPoint({
-          t: pos.timestamp,
-          lat: c.latitude,
-          lon: c.longitude,
-          alt: c.altitude,
-          speed: c.speed,
-          track: c.heading != null && !isNaN(c.heading) ? c.heading : null,
-          acc: c.accuracy,
-        });
-      },
-      (err) => this.emit({ error: err.code === 1 ? 'Standortzugriff verweigert – bitte in den Einstellungen erlauben.' : `GPS-Fehler: ${err.message}` }),
-      { enableHighAccuracy: true, maximumAge: 0, timeout: 30000 }
-    );
+    // nativ: Hintergrund-Ortung (läuft bei gesperrtem Bildschirm weiter), im Browser: navigator.geolocation
+    watchLocation(
+      (p) => this.onPoint(p),
+      (msg) => this.emit({ error: msg }),
+      true
+    ).then((stopFn) => {
+      if (this.stopping || !this.state.active) stopFn();
+      else this.stopWatch = stopFn;
+    });
   }
 
   private startSim(o: { lat: number; lon: number; elevFt: number; speedup: number }) {
@@ -140,9 +130,10 @@ export class Recorder {
   async stop() {
     if (!this.state.active || this.stopping) return;
     this.stopping = true; // synchron sperren: stop() darf nur einmal pro Session laufen
-    if (this.watchId != null) navigator.geolocation.clearWatch(this.watchId);
+    this.stopWatch?.();
+    this.stopWatch = null;
     if (this.simTimer != null) clearInterval(this.simTimer);
-    this.watchId = this.simTimer = null;
+    this.simTimer = null;
     const d = this.detector!;
     d.finish();
     const snap = d.snapshot();

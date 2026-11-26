@@ -72,13 +72,37 @@ GitHub Pages – der Workflow `.github/workflows/pages.yml` ist schon da:
 
 ## Roadmap
 
-1. **iOS-App** mit [Capacitor](https://capacitorjs.com): derselbe Code wird in eine native App verpackt
-   (Xcode/Mac nötig). Dazu Hintergrund-GPS (`@capacitor-community/background-geolocation`),
-   Barometer für Höhe/Vario, Sprachansagen („Touch-and-Go erkannt“).
+1. **iOS-App**: Grundgerüst steht (siehe oben). Als Nächstes: TestFlight-Pipeline, Barometer für Höhe/Vario,
+   Sprachansagen („Touch-and-Go erkannt“), Offline-Kartenkacheln auch in der App.
 2. **Karten**: Vektor-MBTiles, Offline-Download einer Region für openAIP, Lufträume als Daten (für Warnungen).
 3. **Navi**: Route mit Wegpunkten, Luftraumwarnung, Geländewarnung, horizontale Leiste mit Kursabweichung.
 4. **Flugbuch**: Nachtflug, Fluglehrer/Schüler, Unterschrift, PDF-Druck im EASA-Format, Import aus
    anderen Flugbüchern (CSV), Cloud-Sync zwischen Geräten.
+
+## iPhone-App (Capacitor)
+
+Die Web-App ist zusätzlich als **native iOS-App** verpackt (`ios/`, Capacitor 8). Unterschiede zur Web-Version:
+
+- **GPS im Hintergrund**: Aufzeichnung läuft auch bei gesperrtem Bildschirm (Plugin `@capacitor-community/background-geolocation`, `UIBackgroundModes: location`).
+- **Bildschirm bleibt an** im Navi (`@capacitor-community/keep-awake`).
+- Eigenes App-Icon und Startbildschirm, Bundle-ID `app.platzrunde.flugbuch` (in `capacitor.config.ts`).
+
+**Weg A – mit Mac (kostenlos, zum Ausprobieren):** Xcode aus dem App Store installieren, dann
+
+```bash
+npm install
+npm run ios:sync     # Web-App bauen und ins iOS-Projekt kopieren
+npm run ios:open     # öffnet Xcode
+```
+
+In Xcode: Projekt „App“ → *Signing & Capabilities* → *Team* = eigene Apple-ID, iPhone per Kabel anschließen, ▶ drücken.
+Ohne bezahltes Entwicklerkonto läuft die App 7 Tage, danach erneut aus Xcode starten.
+
+**Weg B – TestFlight (Apple Developer Program, 99 €/Jahr):** App wird über GitHub Actions auf einem Cloud-Mac gebaut und an TestFlight
+geschickt, Installation dann über die TestFlight-App – ohne eigenen Mac. Dafür werden Signatur-Daten als GitHub-Secrets benötigt.
+
+Der Workflow **„iOS Build“** (`.github/workflows/ios.yml`, manuell starten) prüft bereits jetzt auf einem macOS-Runner, dass das
+Xcode-Projekt kompiliert.
 
 ## Technik
 

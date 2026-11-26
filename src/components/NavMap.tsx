@@ -13,6 +13,7 @@ import { applyLayers, baseSources, overlaySources } from './tiles';
 import { listMbtiles, type MbtilesMeta } from '../lib/mbtiles';
 import AirfieldSearch from './AirfieldSearch';
 import AirfieldSheet from './AirfieldSheet';
+import { keepScreenOn } from '../lib/native';
 import { circuitPath, effectiveCircuit, getDetailsSync, getFieldData, listFieldsWithCircuits, loadDetails, runwayEnds } from '../lib/airfieldDetails';
 
 const PHASE_TXT = { GROUND: 'AM BODEN', AIRBORNE: 'IN DER LUFT', ROLLOUT: 'AUSROLLEN' } as const;
@@ -65,22 +66,14 @@ export default function NavMap({ recorder, rec, settings, onSettings, onClose }:
   const altFt = pos?.alt != null ? pos.alt * FT_PER_M : null;
   const vs = rec.active && rec.snap ? rec.snap.vsFpm : 0;
 
-  // Bildschirm anlassen
+  // Bildschirm anlassen (nativ: KeepAwake, Browser: Wake Lock)
   useEffect(() => {
-    let lock: { release: () => Promise<void> } | null = null;
-    const req = async () => {
-      try {
-        lock = await (navigator as unknown as { wakeLock?: { request: (t: string) => Promise<{ release: () => Promise<void> }> } }).wakeLock?.request('screen') ?? null;
-      } catch {
-        /* nicht unterstützt */
-      }
-    };
-    req();
-    const onVis = () => document.visibilityState === 'visible' && req();
-    document.addEventListener('visibilitychange', onVis);
+    let release: (() => void) | null = null;
+    let alive = true;
+    keepScreenOn().then((r) => (alive ? (release = r) : r()));
     return () => {
-      document.removeEventListener('visibilitychange', onVis);
-      lock?.release().catch(() => {});
+      alive = false;
+      release?.();
     };
   }, []);
 

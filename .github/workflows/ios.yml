@@ -1,0 +1,24 @@
+# Baut die iOS-App auf einem macOS-Runner von GitHub (ohne Signatur) – prüft, dass das Xcode-Projekt kompiliert.
+# Manuell starten: Actions → "iOS Build" → Run workflow.
+# Für TestFlight wird zusätzlich ein Apple-Developer-Konto + Signatur-Secrets benötigt (siehe README, Abschnitt iPhone-App).
+name: iOS Build
+on:
+  workflow_dispatch:
+jobs:
+  build:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm test
+      - run: npm run build
+      - run: npx cap sync ios
+      - name: Xcode-Build (Simulator, unsigniert)
+        run: |
+          xcodebuild -project ios/App/App.xcodeproj -scheme App -configuration Debug \
+            -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' \
+            CODE_SIGNING_ALLOWED=NO build | tail -40
