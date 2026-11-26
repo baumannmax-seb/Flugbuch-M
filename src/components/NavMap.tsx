@@ -120,13 +120,23 @@ export default function NavMap({ recorder, rec, settings, onSettings, onClose }:
         // Veröffentlichte Platzrunden und An-/Abflugrouten (openflightmaps) ab Zoom 10
         if (z >= 10) {
           for (const p of getDetailsSync(f.icao)?.procs ?? []) {
+            if (p.usage === 'HELICOPTER') continue;
             const circ = p.kind === 'circuit';
-            L.polyline(p.coords, { color: circ ? '#ffab00' : '#e040fb', weight: circ ? 3 : 2.5, dashArray: circ ? undefined : '8 6', opacity: 0.95, interactive: false }).addTo(g);
-            if (circ && z >= 11) {
+            const style: L.PolylineOptions =
+              p.kind === 'circuit'
+                ? { color: '#ffab00', weight: 3 }
+                : p.kind === 'transit'
+                  ? { color: '#b388ff', weight: 2, dashArray: '4 6' }
+                  : p.kind === 'hold'
+                    ? { color: '#e040fb', weight: 2, dashArray: '2 5' }
+                    : { color: '#e040fb', weight: 2.5, dashArray: '8 6' };
+            L.polyline(p.coords, { ...style, opacity: 0.95, interactive: false }).addTo(g);
+            if ((circ && z >= 11) || z >= 13) {
               const mid = p.coords[Math.floor(p.coords.length / 2)];
+              const label = circ ? `${f.icao} ${p.name}${p.rwys?.length ? ' (' + p.rwys.join('/') + ')' : ''}${p.alt ? ' · ' + p.alt : ''}` : `${p.name}${p.alt ? ' · ' + p.alt : ''}`;
               L.marker(mid, {
                 interactive: false,
-                icon: L.divIcon({ className: 'circuit-label', html: `${f.icao} Platzrunde${p.alt ? ' · ' + p.alt : ''}`, iconSize: [170, 20], iconAnchor: [85, 10] }),
+                icon: L.divIcon({ className: circ ? 'circuit-label' : 'circuit-label route', html: label, iconSize: [200, 20], iconAnchor: [100, 10] }),
               }).addTo(g);
             }
           }

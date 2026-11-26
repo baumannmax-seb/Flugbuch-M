@@ -136,15 +136,19 @@ export default function AirfieldSheet({
         {det?.procs && det.procs.length > 0 && (
           <div className="card">
             <h2>Veröffentlichte Verfahren (openflightmaps)</h2>
-            {det.procs.map((p, i) => (
-              <div key={i} className="row small" style={{ padding: '3px 0' }}>
-                <div>
-                  <b style={{ fontSize: 16 }}>{p.kind === 'circuit' ? 'Platzrunde' : p.kind === 'arrival' ? 'Anflug' : p.kind === 'departure' ? 'Abflug' : p.codeType}</b> {p.name}
+            {[...det.procs]
+              .filter((p) => p.usage !== 'HELICOPTER')
+              .sort((a, b) => ['circuit', 'arrival', 'departure', 'transit', 'hold', 'other'].indexOf(a.kind) - ['circuit', 'arrival', 'departure', 'transit', 'hold', 'other'].indexOf(b.kind))
+              .map((p, i) => (
+                <div key={i} className="row small" style={{ padding: '4px 0', borderBottom: '1px solid var(--rule-soft)' }}>
+                  <div>
+                    <b style={{ fontSize: 16 }}>{{ circuit: 'Platzrunde', arrival: 'Anflug', departure: 'Abflug', transit: 'Transit', hold: 'Warten', other: p.codeType }[p.kind]}</b> {p.name}
+                    {p.rwys && p.rwys.length > 0 && <span className="muted"> · Piste {p.rwys.join('/')}</span>}
+                  </div>
+                  <span style={{ flex: '0 0 auto' }}>{p.alt}</span>
                 </div>
-                <span style={{ flex: '0 0 auto' }} className="muted">{p.alt}</span>
-              </div>
-            ))}
-            <p className="small muted" style={{ marginBottom: 0 }}>Wird auf der Karte automatisch angezeigt (Platzrunde orange, Routen violett gestrichelt).</p>
+              ))}
+            <p className="small muted" style={{ marginBottom: 0 }}>Auf der Karte: Platzrunde orange, An-/Abflug violett gestrichelt, Transit lila gepunktet.</p>
           </div>
         )}
 

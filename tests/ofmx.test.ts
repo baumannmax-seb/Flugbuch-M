@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
-import { coord, createOfmxParser, parseOfmxText } from '../src/lib/ofmx';
+import { airacCycle, coord, createOfmxParser, parseOfmxText } from '../src/lib/ofmx';
 
 const fx = (n: string) => readFileSync(new URL(`./fixtures/ofmx/${n}`, import.meta.url), 'utf8');
 
@@ -53,11 +53,11 @@ describe('OFMX-Verfahren (<Prc>, openflightmaps-Erweiterung)', () => {
   const ahp = `<Ahp><AhpUid><codeId>EDXT</codeId></AhpUid><OrgUid><txtName>X</txtName></OrgUid><txtName>TESTPLATZ</txtName><codeType>AD</codeType><geoLat>50.7300N</geoLat><geoLong>011.2400E</geoLong></Ahp>`;
   const prc = (type: string, withAhp: boolean) => `
   <Prc>
-    <PrcUid><txtName>TEST ${type}</txtName></PrcUid>
-    ${withAhp ? '<AhpUid><codeId>EDXT</codeId></AhpUid>' : ''}
+    <PrcUid>${withAhp ? '<AhpUid><codeId>EDXT</codeId></AhpUid>' : ''}<codeId>TEST</codeId></PrcUid>
+    <RunwayAllocation><txtDesig>08</txtDesig></RunwayAllocation>
     <txtName>${type === 'TRAFFIC_CIRCUIT' ? 'UL' : 'S1'}</txtName>
     <codeType>${type}</codeType>
-    <valTrafficCircuitAlt>2100</valTrafficCircuitAlt><uomTrafficCircuitAlt>FT</uomTrafficCircuitAlt>
+    <codeDistVerTfc>ALT</codeDistVerTfc><uomDistVerTfc>FT</uomDistVerTfc><valDistVerTfc>2100</valDistVerTfc>
     <_beztrajectory>
       <gmlPosList>011.24115600,50.73425700 011.24126610,50.73429046 011.24126610,50.73429046 011.25452275,50.73831747 011.25850186,50.73306701 011.23034915,50.72451677</gmlPosList>
     </_beztrajectory>
@@ -70,9 +70,21 @@ describe('OFMX-Verfahren (<Prc>, openflightmaps-Erweiterung)', () => {
     const c = ap.procs.find((p) => p.kind === 'circuit')!;
     expect(c.coords[0]).toEqual([50.734257, 11.241156]);
     expect(c.coords).toHaveLength(5); // doppelter Punkt entfernt
-    expect(c.alt).toBe('2100 FT');
+    expect(c.alt).toBe('2100 ft MSL');
+    expect(c.rwys).toEqual(['08']);
+    expect(c.name).toBe('UL');
     // Anflugroute ohne AhpUid wird über die Lage zugeordnet
     expect(ap.procs.find((p) => p.kind === 'arrival')).toBeTruthy();
     expect(d.meta.diag?.procTypes).toEqual({ TRAFFIC_CIRCUIT: 1, VFR_ARR: 1 });
+  });
+});
+
+describe('AIRAC', () => {
+  it('berechnet Zyklen', () => {
+    expect(airacCycle(new Date(Date.UTC(2025, 0, 23)))).toBe('2501');
+    expect(airacCycle(new Date(Date.UTC(2026, 0, 21)))).toBe('2513');
+    expect(airacCycle(new Date(Date.UTC(2026, 0, 22)))).toBe('2601');
+    expect(airacCycle(new Date(Date.UTC(2026, 10, 26)))).toBe('2612');
+    expect(airacCycle(new Date(Date.UTC(2026, 10, 25)))).toBe('2611');
   });
 });

@@ -43,7 +43,9 @@ export interface OfmxReportingPoint {
 }
 /** Veröffentlichtes VFR-Verfahren aus openflightmaps (<Prc>) */
 export interface OfmxProcedure {
-  kind: 'circuit' | 'arrival' | 'departure' | 'other';
+  kind: 'circuit' | 'arrival' | 'departure' | 'transit' | 'hold' | 'other';
+  rwys?: string[]; // zugeordnete Pistenrichtungen
+  usage?: string; // FIXED_WING, HELICOPTER …
   codeType: string;
   name: string;
   alt: string; // Höhenangabe als Text, falls vorhanden
@@ -258,10 +260,31 @@ class Collector {
         if (coords.length < 2) return;
         // Flugplatz: AhpUid im Element, sonst später über die Lage zugeordnet
         const ahp = tag(inner(b, 'AhpUid'), 'codeId') || tag(inner(b, 'AhpUidAssoc'), 'codeId');
-        // Höhe: erstes Feld mit "Alt" im Namen samt Einheit (Format nicht offiziell dokumentiert)
-        const am = b.match(/<(val\w*Alt\w*)>([\d.]+)<\/\1>[\s\S]{0,200}?<(uom\w*)>(\w+)<\/\3>/);
-        const kind = /CIRCUIT/i.test(codeType) ? 'circuit' : /ARR/i.test(codeType) ? 'arrival' : /DEP/i.test(codeType) ? 'departure' : 'other';
-        this.procs.push({ ahp, p: { kind, codeType, name: tag(b, 'txtName') || tag(inner(b, 'PrcUid'), 'txtName') || tag(inner(b, 'PrcUid'), 'codeId'), alt: am ? `${am[2]} ${am[4]}` : '', coords } });
+        // Höhe der Platzrunde: valDistVerTfc + uomDistVerTfc (codeDistVerTfc ALT = MSL, HEI = über Grund).
+        // Bei Routen: höchste Obergrenze aus den Legs (falls angegeben).
+        let alt = '';
+        const tv = tag(b, 'valDistVerTfc');
+        if (tv) alt = `${tv} ${tag(b, 'uomDistVerTfc').toLowerCase() || 'ft'}${tag(b, 'codeDistVerTfc') === 'HEI' ? ' GND' : ' MSL'}`;
+        else {
+          const ups = [...b.matchAll(/<valDistVerUpper>([\d.]+)<\/valDistVerUpper>/g)].map((m) => Number(m[1]));
+          if (ups.length) alt = `max. ${Math.max(...ups)} ft`;
+        }
+        const kind: OfmxProcedure['kind'] = /CIRCUIT/i.test(codeType)
+          ? 'circuit'
+          : /ARR/i.test(codeType)
+            ? 'arrival'
+            : /DEP/i.test(codeType)
+              ? 'departure'
+              : /TRANS/i.test(codeType)
+                ? 'transit'
+                : /HOLD/i.test(codeType)
+                  ? 'hold'
+                  : 'other';
+        const rwys = [...b.matchAll(/<RunwayAllocation>\s*<txtDesig>([^<]*)<\/txtDesig>/g)].map((m) => m[1].trim());
+        this.procs.push({
+          ahp,
+          p: { kind, codeType, name: tag(after(b, 'PrcUid'), 'txtName') || tag(inner(b, 'PrcUid'), 'codeId'), alt, coords, rwys, usage: tag(b, 'usageType') },
+        });
         break;
       }
       case 'Ase': {
@@ -331,7 +354,9 @@ class Collector {
           }
         }
       }
-      if (ap && !ap.procs.some((x) => x.codeType === p.codeType && x.coords[0][0] === p.coords[0][0] && x.coords[0][1] === p.coords[0][1])) {
+      // Duplikate (gleiche Daten aus mehreren Dateien) über Typ, Name und komplette Geometrie erkennen
+      const key = (x: OfmxProcedure) => `${x.codeType}|${x.name}|${x.coords.length}|${x.coords[0]}|${x.coords[x.coords.length - 1]}`;
+      if (ap && !ap.procs.some((x) => key(x) === key(p))) {
         ap.procs.push(p);
         procsAssigned++;
       }
@@ -439,5 +464,79 @@ export async function parseOfmxFile(file: File, onProgress: (frac: number) => vo
   }
   const data = p.finish(parts.map(([n]) => n.split('/').pop()).join(', '));
   if (!Object.keys(data.airports).length) throw new Error('Keine Flugplätze gefunden – ist das eine OFMX-Datei von openflightmaps?');
+  return data;
+}
+
+// ---------- Direkt-Download von openflightmaps ----------
+
+/** AIRAC-Zyklus (z.B. "2612") für ein Datum; Zyklen sind 28 Tage lang, 2501 begann am 23.01.2025 */
+export function airacCycle(date = new Date(), offset = 0): string {
+  const DAY = 86400000;
+  let start = Date.UTC(2025, 0, 23);
+  let year = 2025;
+  let idx = 1;
+  const target = date.getTime() + offset * 28 * DAY;
+  if (target < start) return '2501';
+  while (start + 28 * DAY <= target) {
+    start += 28 * DAY;
+    const y = new Date(start).getUTCFullYear();
+    if (y !== year) {
+      year = y;
+      idx = 1;
+    } else idx++;
+  }
+  return `${String(year).slice(2)}${String(idx).padStart(2, '0')}`;
+}
+
+export const ofmSnapshotUrl = (cycle: string, region: string) =>
+  `https://storage.googleapis.com/snapshots.openflightmaps.org/live/${cycle}/ofmx/${region}/latest/isolated/ofmx_${region}.xml`;
+
+/** Lädt die vollständige OFMX-XML (inkl. Platzrunden) einer Region und parst sie schon während des Downloads */
+export async function downloadOfm(region: string, onProgress: (frac: number, info: string) => void): Promise<OfmxData> {
+  const r = region.trim().toLowerCase();
+  let res: Response | null = null;
+  let cycle = '';
+  for (const off of [0, -1, 1]) {
+    cycle = airacCycle(new Date(), off);
+    onProgress(0, `Suche AIRAC ${cycle} …`);
+    const x = await fetch(ofmSnapshotUrl(cycle, r));
+    if (x.ok) {
+      res = x;
+      break;
+    }
+  }
+  if (!res || !res.body) throw new Error(`Keine openflightmaps-Daten für Region „${r}“ gefunden.`);
+  const total = Number(res.headers.get('content-length')) || 0;
+  const reader = res.body.getReader();
+  const dec = new TextDecoder('utf-8');
+  const p = createOfmxParser();
+  p.file(`ofmx_${r}.xml (AIRAC ${cycle})`);
+  let got = 0;
+  let pending = '';
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    got += value.length;
+    pending += dec.decode(value, { stream: true });
+    // in größeren Happen parsen (spart Arbeit bei vielen kleinen Netzwerkpaketen)
+    if (pending.length > 2_000_000) {
+      p.push(pending);
+      pending = '';
+    }
+    onProgress(total ? got / total : 0, `AIRAC ${cycle} · ${(got / 1048576).toFixed(0)}${total ? ` / ${(total / 1048576).toFixed(0)}` : ''} MB`);
+  }
+  p.push(pending + dec.decode());
+  const data = p.finish(`ofmx_${r}.xml`);
+  data.meta.regions = data.meta.regions || r.toUpperCase();
+  // Ablauf = Beginn des nächsten AIRAC-Zyklus
+  const now = new Date();
+  for (let d = 1; d <= 29; d++) {
+    const t = new Date(now.getTime() + d * 86400000);
+    if (airacCycle(t) !== cycle) {
+      data.meta.expiration = new Date(Date.UTC(t.getUTCFullYear(), t.getUTCMonth(), t.getUTCDate())).toISOString();
+      break;
+    }
+  }
+  if (!Object.keys(data.airports).length) throw new Error('Download enthielt keine Flugplätze.');
   return data;
 }
