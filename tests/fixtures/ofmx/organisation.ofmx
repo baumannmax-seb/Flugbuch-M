@@ -1,0 +1,157 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<OFMX-Snapshot xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://schema.openflightmaps.org/0.1/OFMX-Snapshot.xsd" version="0.1" origin="example" namespace="00000000-0000-0000-0000-000000000000" regions="LF" sourced="2018-01-01T08:00:00Z" created="2018-01-01T12:09:15Z" effective="2018-01-04T00:00:00Z" expiration="2018-02-01T00:00:00Z">
+  <Org source="LF|GEN|1.1|2018-01-04|1">
+    <OrgUid region="LF" mid="971ba0a9-3714-12d5-d139-d26d5f1d6f25">
+      <txtName>FRANCE</txtName>
+    </OrgUid>
+    <codeId>LF</codeId>
+    <codeType>S</codeType>
+    <txtRmk>Mainland and Corsica only</txtRmk>
+  </Org>
+
+  <Uni source="LF|AD|1.6|2018-01-04|1846">
+    <UniUid region="LF" mid="d105b6b6-e020-2a73-5ec9-5eb3d5d86499">
+      <txtName>STRASBOURG</txtName>
+      <codeType>APP</codeType>
+    </UniUid>
+    <OrgUid region="LF" mid="971ba0a9-3714-12d5-d139-d26d5f1d6f25">
+      <txtName>FRANCE</txtName>
+    </OrgUid>
+    <AhpUid region="LF" mid="561c1da4-3ba9-4389-08a3-2b83c9fc8d07">
+      <codeId>LFST</codeId>
+    </AhpUid>
+    <codeClass>ICAO</codeClass>
+    <txtRmk>APP split in two sectors east and west</txtRmk>
+  </Uni>
+
+  <Ser source="LF|AD|1.6|2018-01-04|1846">
+    <SerUid mid="6a3ceb1b-5bbf-1fe4-8926-6fddd6bd1169">
+      <UniUid region="LF" mid="d105b6b6-e020-2a73-5ec9-5eb3d5d86499">
+        <txtName>STRASBOURG</txtName>
+        <codeType>APP</codeType>
+      </UniUid>
+      <codeType>APP</codeType>
+      <noSeq>1</noSeq>
+    </SerUid>
+    <Stt>
+      <codeWorkHr>H24</codeWorkHr>
+    </Stt>
+    <txtRmk>aka STRASBOURG approche</txtRmk>
+  </Ser>
+
+  <Fqy>
+    <FqyUid mid="45f20a6c-0969-928e-a0a7-12eb289674c7">
+      <SerUid mid="6a3ceb1b-5bbf-1fe4-8926-6fddd6bd1169">
+        <UniUid region="LF" mid="d105b6b6-e020-2a73-5ec9-5eb3d5d86499">
+          <txtName>STRASBOURG</txtName>
+          <codeType>APP</codeType>
+        </UniUid>
+        <codeType>APP</codeType>
+        <noSeq>1</noSeq>
+      </SerUid>
+      <valFreqTrans>119.575</valFreqTrans>
+    </FqyUid>
+    <valFreqRec>119.575</valFreqRec>
+    <uomFreq>MHZ</uomFreq>
+    <codeType>STD</codeType>
+    <Ftt>
+      <codeWorkHr>H24</codeWorkHr>
+    </Ftt>
+    <txtRmk>Languages EN and FR only</txtRmk>
+    <Cdl>
+      <txtCallSign>STRASBOURG APPROACH (SECTOR EAST)</txtCallSign>
+      <codeLang>EN</codeLang>
+    </Cdl>
+    <Cdl>
+      <txtCallSign>STRASBOURG APPROCHE (SECTEUR EST)</txtCallSign>
+      <codeLang>FR</codeLang>
+    </Cdl>
+  </Fqy>
+
+  <Fqy>
+    <FqyUid mid="340a8b95-570e-c10e-ebfd-6d760894c210">
+      <SerUid mid="6a3ceb1b-5bbf-1fe4-8926-6fddd6bd1169">
+        <UniUid region="LF" mid="d105b6b6-e020-2a73-5ec9-5eb3d5d86499">
+          <txtName>STRASBOURG</txtName>
+          <codeType>APP</codeType>
+        </UniUid>
+        <codeType>APP</codeType>
+        <noSeq>1</noSeq>
+      </SerUid>
+      <valFreqTrans>120.700</valFreqTrans>
+    </FqyUid>
+    <valFreqRec>120.700</valFreqRec>
+    <uomFreq>MHZ</uomFreq>
+    <codeType>STD</codeType>
+    <Ftt>
+      <codeWorkHr>H24</codeWorkHr>
+    </Ftt>
+    <txtRmk>Languages EN and FR only</txtRmk>
+    <Cdl>
+      <txtCallSign>STRASBOURG APPROACH (SECTOR WEST)</txtCallSign>
+      <codeLang>EN</codeLang>
+    </Cdl>
+    <Cdl>
+      <txtCallSign>STRASBOURG APPROACH (SECTEUR OEST)</txtCallSign>
+      <codeLang>FR</codeLang>
+    </Cdl>
+  </Fqy>
+
+  <Fqy>
+    <FqyUid mid="328b4d89-7c89-9ca0-c0cc-91284870d507">
+      <SerUid mid="6a3ceb1b-5bbf-1fe4-8926-6fddd6bd1169">
+        <UniUid region="LF" mid="d105b6b6-e020-2a73-5ec9-5eb3d5d86499">
+          <txtName>STRASBOURG</txtName>
+          <codeType>APP</codeType>
+        </UniUid>
+        <codeType>APP</codeType>
+        <noSeq>1</noSeq>
+      </SerUid>
+      <valFreqTrans>133.100</valFreqTrans>
+    </FqyUid>
+    <valFreqRec>133.100</valFreqRec>
+    <uomFreq>MHZ</uomFreq>
+    <codeType>ALT</codeType>
+    <Ftt>
+      <codeWorkHr>H24</codeWorkHr>
+    </Ftt>
+    <txtRmk>Languages EN and FR only</txtRmk>
+    <Cdl>
+      <txtCallSign>STRASBOURG APPROACH (AUXILIARY)</txtCallSign>
+      <codeLang>EN</codeLang>
+    </Cdl>
+    <Cdl>
+      <txtCallSign>STRASBOURG APPROACH (SUPPLETIVE)</txtCallSign>
+      <codeLang>FR</codeLang>
+    </Cdl>
+  </Fqy>
+
+  <Fqy>
+    <FqyUid mid="e3393ffe-0d9d-0d33-1c48-65203b1fa4a7">
+      <SerUid mid="6a3ceb1b-5bbf-1fe4-8926-6fddd6bd1169">
+        <UniUid region="LF" mid="d105b6b6-e020-2a73-5ec9-5eb3d5d86499">
+          <txtName>STRASBOURG</txtName>
+          <codeType>APP</codeType>
+        </UniUid>
+        <codeType>APP</codeType>
+        <noSeq>1</noSeq>
+      </SerUid>
+      <valFreqTrans>134.575</valFreqTrans>
+    </FqyUid>
+    <valFreqRec>134.575</valFreqRec>
+    <uomFreq>MHZ</uomFreq>
+    <codeType>STD</codeType>
+    <Ftt>
+      <codeWorkHr>H24</codeWorkHr>
+    </Ftt>
+    <txtRmk>Languages EN and FR only</txtRmk>
+    <Cdl>
+      <txtCallSign>STRASBOURG CONTROL</txtCallSign>
+      <codeLang>EN</codeLang>
+    </Cdl>
+    <Cdl>
+      <txtCallSign>STRASBOURG CONTROLE</txtCallSign>
+      <codeLang>FR</codeLang>
+    </Cdl>
+  </Fqy>
+</OFMX-Snapshot>

@@ -1,0 +1,279 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<OFMX-Snapshot xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://schema.openflightmaps.org/0.1/OFMX-Snapshot.xsd" version="0.1" origin="example" namespace="00000000-0000-0000-0000-000000000000" regions="EB LF" sourced="2018-01-01T08:00:00Z" created="2018-01-01T12:09:15Z" effective="2018-01-04T00:00:00Z" expiration="2018-02-01T00:00:00Z">
+
+  <!-- Designated point -->
+
+  <Dpn source="LF|VAC|LFNT|2018-01-04|1">
+    <DpnUid region="LF" mid="1a9c5223-0a1a-d774-920c-c61caa832503">
+      <codeId>NA</codeId>
+      <geoLat>49.98708333N</geoLat>
+      <geoLong>003.01986111E</geoLong>
+    </DpnUid>
+    <AhpUidAssoc region="LF" mid="0ce0d3d9-2331-f3ed-cbf5-6a5344a962db">
+      <codeId>LFMV</codeId>
+    </AhpUidAssoc>
+    <codeDatum>WGE</codeDatum>
+    <codeType>VFR-MRP</codeType>
+    <txtName>ILE DE BARTHELASSE / BARTHELASSE ISLAND</txtName>
+    <txtRmk>see VAC</txtRmk>
+  </Dpn>
+
+  <Dpn>
+    <DpnUid region="LF" mid="5149514b-07dc-c1b6-f40b-9572ccb6300b">
+      <codeId>LF65121D15</codeId>
+      <geoLat>46.28361111N</geoLat>
+      <geoLong>006.64444444E</geoLong>
+    </DpnUid>
+    <codeDatum>WGE</codeDatum>
+    <codeType>MOUNTAIN-PASS</codeType>
+    <txtName>COL DU CORBIER</txtName>
+    <valElev>1237</valElev>
+    <uomElev>M</uomElev>
+    <valTrueBrg>050</valTrueBrg>
+    <valMagBrg>052</valMagBrg>
+  </Dpn>
+
+  <!-- DME -->
+
+  <Dme source="LF|ENR|4.3|2018-01-04|316">
+    <DmeUid region="LF" mid="b8d9691a-1c02-c4a3-3cda-3c18f64d6a56">
+      <codeId>ZR</codeId>
+      <geoLat>43.32247222N</geoLat>
+      <geoLong>003.34619444E</geoLong>
+    </DmeUid>
+    <OrgUid region="LF" mid="971ba0a9-3714-12d5-d139-d26d5f1d6f25">
+      <txtName>FRANCE</txtName>
+    </OrgUid>
+    <txtName>BEZIERS VIAS</txtName>
+    <codeChannel>30Y</codeChannel>
+    <valGhostFreq>117.6</valGhostFreq>
+    <uomGhostFreq>MHZ</uomGhostFreq>
+    <codeDatum>WGE</codeDatum>
+    <valElev>88</valElev>
+    <uomDistVer>FT</uomDistVer>
+    <Dtt>
+      <codeWorkHr>H24</codeWorkHr>
+    </Dtt>
+    <txtRmk>25NM FL250 119°/354m THR 09</txtRmk>
+  </Dme>
+
+  <!-- Marker -->
+
+  <Mkr source="EB|AD|2.19|2018-01-04|51">
+    <MkrUid region="EB" mid="9344a479-7192-041f-fa79-ec59cdf45e3d">
+      <codeId>--</codeId>
+      <geoLat>51.16727778N</geoLat>
+      <geoLong>004.56630556E</geoLong>
+    </MkrUid>
+    <OrgUid region="EB" mid="309a3b22-ee00-a6fc-d929-8b4849ee9229">
+      <txtName>BELGOCONTROL</txtName>
+    </OrgUid>
+    <IlsUid mid="c434fc28-b846-4736-aad3-5bd942216677">
+      <RdnUid mid="d959eeb1-c260-8d4b-0eef-d78968844432">
+        <RwyUid mid="ef163b2a-b50e-4b65-1315-ee77bcf865dc">
+          <AhpUid region="EB" mid="df97f099-d07d-04e6-adf8-e8294adaa0a3">
+            <codeId>EBAW</codeId>
+          </AhpUid>
+          <txtDesig>11/29</txtDesig>
+        </RwyUid>
+        <txtDesig>29</txtDesig>
+      </RdnUid>
+    </IlsUid>
+    <codePsnIls>O</codePsnIls>
+    <valFreq>75</valFreq>
+    <uomFreq>MHZ</uomFreq>
+    <txtName>ANTWERP MARKER BEACON</txtName>
+    <codeDatum>WGE</codeDatum>
+    <valElev>39</valElev>
+    <uomDistVer>FT</uomDistVer>
+    <Mtt>
+      <codeWorkHr>H24</codeWorkHr>
+    </Mtt>
+    <txtRmk>3.73 NM FM THR 29</txtRmk>
+  </Mkr>
+
+  <!-- NDB -->
+
+  <Ndb source="LF|ENR|4.1|2018-01-04|99">
+    <NdbUid region="LF" mid="e3512a07-bace-c643-00b5-9ba613089565">
+      <codeId>AMB</codeId>
+      <geoLat>47.41816666N</geoLat>
+      <geoLong>001.04100000E</geoLong>
+    </NdbUid>
+    <OrgUid region="LF" mid="971ba0a9-3714-12d5-d139-d26d5f1d6f25">
+      <txtName>FRANCE</txtName>
+    </OrgUid>
+    <txtName>AMBOISE</txtName>
+    <valFreq>341</valFreq>
+    <uomFreq>KHZ</uomFreq>
+    <codeClass>B</codeClass>
+    <codeDatum>WGE</codeDatum>
+    <valElev>397</valElev>
+    <uomDistVer>FT</uomDistVer>
+    <Ntt>
+      <codeWorkHr>H24</codeWorkHr>
+    </Ntt>
+    <txtRmk>50NM FL500</txtRmk>
+  </Ndb>
+
+  <!-- TACAN -->
+
+  <Tcn source="LF|ENR|4.1|2018-01-04|1074">
+    <TcnUid region="LF" mid="67b60a33-793b-b836-dc51-50fcb976a635">
+      <codeId>HYE</codeId>
+      <geoLat>43.10030556N</geoLat>
+      <geoLong>006.14763889E</geoLong>
+    </TcnUid>
+    <OrgUid region="LF" mid="971ba0a9-3714-12d5-d139-d26d5f1d6f25">
+      <txtName>FRANCE</txtName>
+    </OrgUid>
+    <txtName>HYERES LE PALYVESTRE</txtName>
+    <codeChannel>27X</codeChannel>
+    <valGhostFreq>109</valGhostFreq>
+    <uomGhostFreq>MHZ</uomGhostFreq>
+    <codeDatum>WGE</codeDatum>
+    <valElev>7</valElev>
+    <uomDistVer>FT</uomDistVer>
+    <Ttt>
+      <codeWorkHr>H24</codeWorkHr>
+    </Ttt>
+    <txtRmk>100NM FL500 021°/353m ARP</txtRmk>
+  </Tcn>
+
+  <!-- VOR -->
+
+  <Vor source="LF|ENR|4.1|2018-01-04|146">
+    <VorUid region="LF" mid="f3664c1e-8f7a-a6ab-4d69-c689387ef3ad">
+      <codeId>ANG</codeId>
+      <geoLat>47.53686111N</geoLat>
+      <geoLong>000.85183333W</geoLong>
+    </VorUid>
+    <OrgUid region="LF" mid="971ba0a9-3714-12d5-d139-d26d5f1d6f25">
+      <txtName>FRANCE</txtName>
+    </OrgUid>
+    <txtName>ANGERS</txtName>
+    <codeType>VOR</codeType>
+    <valFreq>113</valFreq>
+    <uomFreq>MHZ</uomFreq>
+    <codeTypeNorth>MAG</codeTypeNorth>
+    <valDeclination>0.27</valDeclination>
+    <valMagVar>0.27</valMagVar>
+    <dateMagVar>2018</dateMagVar>
+    <valMagVarChg>0.13</valMagVarChg>
+    <codeDatum>WGE</codeDatum>
+    <valElev>304</valElev>
+    <uomDistVer>FT</uomDistVer>
+    <Vtt>
+      <codeWorkHr>H24</codeWorkHr>
+    </Vtt>
+    <txtRmk>120NM(315°..45°) 80NM FL500</txtRmk>
+  </Vor>
+
+  <!-- VOR/DME -->
+
+  <Vor source="LF|ENR|4.1|2018-01-04|190">
+    <VorUid region="LF" mid="cc347244-13b3-6010-32fe-88d2cf076406">
+      <codeId>AVN</codeId>
+      <geoLat>43.99536111N</geoLat>
+      <geoLong>004.74638889E</geoLong>
+    </VorUid>
+    <OrgUid region="LF" mid="971ba0a9-3714-12d5-d139-d26d5f1d6f25">
+      <txtName>FRANCE</txtName>
+    </OrgUid>
+    <txtName>AVIGNON PUJAUT</txtName>
+    <codeType>VOR</codeType>
+    <valFreq>112.2</valFreq>
+    <uomFreq>MHZ</uomFreq>
+    <codeTypeNorth>MAG</codeTypeNorth>
+    <valDeclination>1.46</valDeclination>
+    <valMagVar>1.46</valMagVar>
+    <dateMagVar>2018</dateMagVar>
+    <valMagVarChg>0.12</valMagVarChg>
+    <codeDatum>WGE</codeDatum>
+    <valElev>159</valElev>
+    <uomDistVer>FT</uomDistVer>
+    <Vtt>
+      <codeWorkHr>H24</codeWorkHr>
+    </Vtt>
+    <txtRmk>60NM FL500</txtRmk>
+  </Vor>
+
+  <Dme>
+    <DmeUid region="LF" mid="240bffcc-0239-6095-25e5-6b72e9ce5cc2">
+      <codeId>AVN</codeId>
+      <geoLat>43.99536111N</geoLat>
+      <geoLong>004.74638889E</geoLong>
+    </DmeUid>
+    <OrgUid region="LF" mid="971ba0a9-3714-12d5-d139-d26d5f1d6f25">
+      <txtName>FRANCE</txtName>
+    </OrgUid>
+    <VorUid region="LF" mid="cc347244-13b3-6010-32fe-88d2cf076406">
+      <codeId>AVN</codeId>
+      <geoLat>43.99536111N</geoLat>
+      <geoLong>004.74638889E</geoLong>
+    </VorUid>
+    <txtName>AVIGNON PUJAUT</txtName>
+    <codeChannel>59X</codeChannel>
+    <codeDatum>WGE</codeDatum>
+    <valElev>159</valElev>
+    <uomDistVer>FT</uomDistVer>
+    <Dtt>
+      <codeWorkHr>H24</codeWorkHr>
+    </Dtt>
+    <txtRmk>60NM FL500</txtRmk>
+  </Dme>
+
+  <!-- VORTAC -->
+
+  <Vor source="EB|ENR|4.1|2018-01-04|2">
+    <VorUid region="EB" mid="213d6904-1839-6fba-e504-32e4e14632d7">
+      <codeId>KOK</codeId>
+      <geoLat>51.09472222N</geoLat>
+      <geoLong>002.65166667E</geoLong>
+    </VorUid>
+    <OrgUid region="EB" mid="309a3b22-ee00-a6fc-d929-8b4849ee9229">
+      <txtName>BELGOCONTROL</txtName>
+    </OrgUid>
+    <txtName>KOKSY</txtName>
+    <codeType>VOR</codeType>
+    <valFreq>114.5</valFreq>
+    <uomFreq>MHZ</uomFreq>
+    <codeTypeNorth>MAG</codeTypeNorth>
+    <valDeclination>0.56</valDeclination>
+    <valMagVar>0.56</valMagVar>
+    <dateMagVar>2018</dateMagVar>
+    <valMagVarChg>0.14</valMagVarChg>
+    <codeDatum>WGE</codeDatum>
+    <valElev>48</valElev>
+    <uomDistVer>FT</uomDistVer>
+    <Vtt>
+      <codeWorkHr>H24</codeWorkHr>
+    </Vtt>
+    <txtRmk>80NM FL500</txtRmk>
+  </Vor>
+
+  <Tcn>
+    <TcnUid region="EB" mid="1ddd99e6-62f3-43c0-2187-2b25bde52404">
+      <codeId>KOK</codeId>
+      <geoLat>51.09472222N</geoLat>
+      <geoLong>002.65166667E</geoLong>
+    </TcnUid>
+    <OrgUid region="EB" mid="de3c211e-426d-d9d3-fc3b-3d7a076a4496">
+      <txtName>KOKSY</txtName>
+    </OrgUid>
+    <VorUid region="EB" mid="213d6904-1839-6fba-e504-32e4e14632d7">
+      <codeId>KOK</codeId>
+      <geoLat>51.09472222N</geoLat>
+      <geoLong>002.65166667E</geoLong>
+    </VorUid>
+    <txtName>KOKSY</txtName>
+    <codeChannel>92X</codeChannel>
+    <codeDatum>WGE</codeDatum>
+    <valElev>48</valElev>
+    <uomDistVer>FT</uomDistVer>
+    <Ttt>
+      <codeWorkHr>H24</codeWorkHr>
+    </Ttt>
+    <txtRmk>Belgian Air Component</txtRmk>
+  </Tcn>
+</OFMX-Snapshot>

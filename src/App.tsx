@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { db, type LogEntry } from './lib/db';
 import { loadAirfields } from './lib/airfields';
+import { loadOfmx } from './lib/ofmxStore';
 import { DEFAULT_APP_SETTINGS, loadSettings, saveSettings, type AppSettings } from './lib/settings';
 import { Recorder, type RecorderState } from './lib/recorder';
 import Logbook from './components/Logbook';
@@ -31,6 +32,7 @@ export default function App() {
     let done = false;
     (async () => {
       const [s] = await Promise.all([loadSettings(), loadAirfields()]);
+      await loadOfmx().catch(() => null); // openflightmaps-Daten (falls importiert) einmischen
       if (done) return;
       setSettings(s);
       settingsRef.current = s;

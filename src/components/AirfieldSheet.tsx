@@ -2,7 +2,8 @@ import { useEffect, useState } from 'react';
 import type { Airfield } from '../lib/airfields';
 import {
   addFieldDoc,
-  DEFAULT_CIRCUIT,
+  effectiveCircuit,
+  ofmSourceLabel,
   getDetailsSync,
   getFieldData,
   getFieldDoc,
@@ -56,9 +57,12 @@ export default function AirfieldSheet({
 
   const dirs = det ? det.runways.flatMap((r) => [r.le, r.he]).filter(Boolean) : [];
   const active = data?.active ?? null;
-  const cfg = active ? { ...DEFAULT_CIRCUIT, ...data?.circuits[active] } : null;
-  const setCfg = (patch: Partial<typeof DEFAULT_CIRCUIT>) =>
-    data && active && update({ ...data, circuits: { ...data.circuits, [active]: { ...DEFAULT_CIRCUIT, ...data.circuits[active], ...patch } } });
+  const cfg = active ? effectiveCircuit(field.icao, active, data?.circuits[active]) : null;
+  // nur geänderte Werte speichern, damit die Richtung aus openflightmaps sonst greift
+  const setCfg = (patch: Partial<{ dir: 'L' | 'R'; offsetM: number; altFt: string }>) =>
+    data && active && update({ ...data, circuits: { ...data.circuits, [active]: { ...data.circuits[active], ...patch } } });
+  const patName = (p?: string) => (p === 'L' ? 'Linksplatzrunde' : p === 'R' ? 'Rechtsplatzrunde' : p === 'E' ? 'links oder rechts' : '');
+  const [showRmk, setShowRmk] = useState(false);
 
   const isGerman = field.icao.startsWith('ED') || field.icao.startsWith('ET');
 
@@ -95,6 +99,11 @@ export default function AirfieldSheet({
             <div key={i} className="small" style={{ padding: '4px 0', borderBottom: '1px solid var(--line)' }}>
               <b style={{ fontSize: 16 }}>{r.le}{r.he ? `/${r.he}` : ''}</b> · {Math.round(r.lengthFt * 0.3048)} × {Math.round(r.widthFt * 0.3048)} m · {surfaceName(r.surface)}
               {r.lighted ? ' · befeuert' : ''}
+              {det.patterns && (det.patterns[r.le] || det.patterns[r.he]) && (
+                <div className="muted">
+                  Platzrunde: {[r.le, r.he].filter((x) => det.patterns?.[x]).map((x) => `${x} ${patName(det.patterns![x])}`).join(' · ')}
+                </div>
+              )}
             </div>
           ))}
         </div>
@@ -108,6 +117,28 @@ export default function AirfieldSheet({
                 <b style={{ flex: '0 0 auto', fontSize: 16 }}>{Number(f.mhz).toFixed(3)}</b>
               </div>
             ))}
+          </div>
+        )}
+
+        {det?.rps && det.rps.length > 0 && (
+          <div className="card">
+            <h2>VFR-Meldepunkte</h2>
+            {det.rps.map((p) => (
+              <div key={p.id + p.lat} className="row small" style={{ padding: '3px 0' }}>
+                <div>
+                  <b style={{ fontSize: 16 }}>{p.id}</b> {p.name !== p.id && p.name}
+                </div>
+                <span style={{ flex: '0 0 auto' }} className={p.mandatory ? 'status-bad' : 'muted'}>{p.mandatory ? '▲ Pflicht' : '△ bei Bedarf'}</span>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {det?.rmk && (
+          <div className="card">
+            <h2>Hinweise</h2>
+            <p className="small" style={{ whiteSpace: 'pre-wrap', margin: 0, maxHeight: showRmk ? 'none' : 90, overflow: 'hidden' }}>{det.rmk}</p>
+            {det.rmk.length > 200 && <button className="link small" onClick={() => setShowRmk(!showRmk)}>{showRmk ? 'weniger' : 'mehr anzeigen'}</button>}
           </div>
         )}
 
@@ -128,8 +159,8 @@ export default function AirfieldSheet({
                   <label>
                     Richtung
                     <select value={cfg.dir} onChange={(e) => setCfg({ dir: e.target.value as 'L' | 'R' })}>
-                      <option value="L">Linksplatzrunde</option>
-                      <option value="R">Rechtsplatzrunde</option>
+                      <option value="L">Linksplatzrunde{cfg.dirSource === 'ofm' && cfg.dir === 'L' ? ' (OFM)' : ''}</option>
+                      <option value="R">Rechtsplatzrunde{cfg.dirSource === 'ofm' && cfg.dir === 'R' ? ' (OFM)' : ''}</option>
                     </select>
                   </label>
                   <label>
@@ -187,12 +218,17 @@ export default function AirfieldSheet({
           <h2>Links</h2>
           <div className="links">
             {isGerman && <a href="https://aip.dfs.de/basicVFR/" target="_blank" rel="noreferrer">DFS AIP VFR (Sichtanflugkarten)</a>}
-            {det?.web && <a href={det.web} target="_blank" rel="noreferrer">Website des Platzes</a>}
+            {det?.web && <a href={det.web.startsWith('http') ? det.web : `https://${det.web}`} target="_blank" rel="noreferrer">Website des Platzes</a>}
+            {det?.addresses?.filter((a) => a.type === 'PHONE' || a.type === 'TEL').map((a) => (
+              <a key={a.value} href={`tel:${a.value.replace(/[^\d+]/g, '')}`}>☎ {a.value}{a.rmk ? ` (${a.rmk})` : ''}</a>
+            ))}
             {det?.wiki && <a href={det.wiki} target="_blank" rel="noreferrer">Wikipedia</a>}
             <a href={`https://ourairports.com/airports/${encodeURIComponent(field.icao)}/`} target="_blank" rel="noreferrer">OurAirports</a>
           </div>
         </div>
-        <p className="small muted">Daten: OurAirports (Public Domain), ohne Gewähr. Vor dem Flug immer amtliche Quellen prüfen.</p>
+        <p className="small muted">
+          Daten: {det?.source === 'ofm' ? ofmSourceLabel() : 'OurAirports (Public Domain)'}, ohne Gewähr. Vor dem Flug immer amtliche Quellen prüfen.
+        </p>
       </div>
     </div>
   );

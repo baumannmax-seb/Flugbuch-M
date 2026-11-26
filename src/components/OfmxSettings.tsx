@@ -1,0 +1,68 @@
+import { useState } from 'react';
+import { parseOfmxFile } from '../lib/ofmx';
+import { clearOfmx, ofmxAirportCount, ofmxExpired, ofmxMeta, saveOfmx } from '../lib/ofmxStore';
+
+const d = (s: string) => (s ? new Date(s).toLocaleDateString('de-DE') : '–');
+
+/** Import von openflightmaps-Daten (OFMX) */
+export default function OfmxSettings() {
+  const [, force] = useState(0);
+  const [progress, setProgress] = useState<number | null>(null);
+  const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
+  const meta = ofmxMeta();
+
+  const onFile = async (f: File) => {
+    setMsg(null);
+    setProgress(0);
+    try {
+      const data = await parseOfmxFile(f, setProgress);
+      await saveOfmx(data);
+      const aps = Object.values(data.airports);
+      const rps = aps.reduce((s, a) => s + a.rps.length, 0);
+      const pat = aps.reduce((s, a) => s + a.runways.reduce((t, r) => t + r.dirs.filter((x) => x.pattern === 'L' || x.pattern === 'R').length, 0), 0);
+      setMsg({ ok: true, text: `${aps.length} Flugplätze, ${rps} VFR-Meldepunkte und ${pat} Platzrundenrichtungen übernommen.` });
+    } catch (e) {
+      setMsg({ ok: false, text: `Import fehlgeschlagen: ${(e as Error).message}` });
+    } finally {
+      setProgress(null);
+      force((x) => x + 1);
+    }
+  };
+
+  return (
+    <div className="card">
+      <h2>Platzdaten (openflightmaps)</h2>
+      <p className="small muted" style={{ marginTop: 0 }}>
+        OFMX-Datei deiner Region von openflightmaps.org herunterladen (Downloads → Region, z. B. „ed“ → OFMX) und hier importieren – ZIP
+        geht direkt. Damit kennt die App die exakte Pistenlage, die Platzrundenrichtung je Piste, die VFR-Meldepunkte, Frequenzen und
+        Platzhinweise. Die Daten bleiben auf diesem Gerät; bitte die Nutzungsbedingungen von openflightmaps beachten.
+      </p>
+      {meta && (
+        <div className={ofmxExpired() ? 'err' : 'ok-box'} style={{ marginBottom: 10 }}>
+          <b>{meta.regions || 'OFMX'}</b> · {ofmxAirportCount()} Flugplätze · gültig {d(meta.effective)} – {d(meta.expiration)}
+          {ofmxExpired() && <div>⚠️ Abgelaufen – bitte den aktuellen AIRAC-Stand neu importieren.</div>}
+          <div className="small muted">{meta.fileName}</div>
+        </div>
+      )}
+      {progress != null ? (
+        <div>
+          <div className="small">Lese OFMX … {Math.round(progress * 100)} %</div>
+          <div className="progress"><div style={{ width: `${progress * 100}%` }} /></div>
+        </div>
+      ) : (
+        <div className="row">
+          <label className="button-like">
+            <input type="file" accept=".ofmx,.xml,.zip,application/zip,application/xml,text/xml" style={{ display: 'none' }} onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ''; if (f) onFile(f); }} />
+            <span>📂 {meta ? 'Neue OFMX-Datei' : 'OFMX-Datei importieren'}</span>
+          </label>
+          {meta && (
+            <button style={{ flex: '0 0 auto' }} className="danger" onClick={async () => { if (confirm('openflightmaps-Daten entfernen?')) { await clearOfmx(); location.reload(); } }}>
+              Entfernen
+            </button>
+          )}
+        </div>
+      )}
+      {msg && <div className={msg.ok ? 'ok-box' : 'err'} style={{ marginTop: 10 }}>{msg.text}</div>}
+    </div>
+  );
+}

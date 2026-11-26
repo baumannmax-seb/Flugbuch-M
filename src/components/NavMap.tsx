@@ -13,7 +13,7 @@ import { applyLayers, baseSources, overlaySources } from './tiles';
 import { listMbtiles, type MbtilesMeta } from '../lib/mbtiles';
 import AirfieldSearch from './AirfieldSearch';
 import AirfieldSheet from './AirfieldSheet';
-import { circuitPath, DEFAULT_CIRCUIT, getDetailsSync, getFieldData, listFieldsWithCircuits, loadDetails, runwayEnds } from '../lib/airfieldDetails';
+import { circuitPath, effectiveCircuit, getDetailsSync, getFieldData, listFieldsWithCircuits, loadDetails, runwayEnds } from '../lib/airfieldDetails';
 
 const PHASE_TXT = { GROUND: 'AM BODEN', AIRBORNE: 'IN DER LUFT', ROLLOUT: 'AUSROLLEN' } as const;
 
@@ -117,6 +117,20 @@ export default function NavMap({ recorder, rec, settings, onSettings, onClose }:
             L.polyline([e.a, e.b], { color: /GR|TURF/i.test(r.surface) ? '#66bb6a' : '#eceff1', weight: w, opacity: 0.9, interactive: false, dashArray: e.approx ? '6 4' : undefined }).addTo(g);
           }
         }
+        // VFR-Meldepunkte (openflightmaps) ab Zoom 10
+        if (z >= 10) {
+          for (const p of getDetailsSync(f.icao)?.rps ?? []) {
+            L.marker([p.lat, p.lon], {
+              interactive: false,
+              icon: L.divIcon({
+                className: 'rp-icon',
+                html: `<span class="rp-tri ${p.mandatory ? 'mrp' : ''}"></span>${z >= 11 ? `<span class="rp-label">${p.id}</span>` : ''}`,
+                iconSize: [14, 14],
+                iconAnchor: [7, 9],
+              }),
+            }).addTo(g);
+          }
+        }
         // großes, unsichtbares Tippziel + sichtbarer Kreis
         L.circleMarker([f.lat, f.lon], { radius: 18, stroke: false, fillOpacity: 0, bubblingMouseEvents: false })
           .on('click', () => setSelField(f))
@@ -164,7 +178,7 @@ export default function NavMap({ recorder, rec, settings, onSettings, onClose }:
         const e = r && runwayEnds(f, r);
         if (!r || !e) continue;
         const [thr, end] = r.le === fd.active ? [e.a, e.b] : [e.b, e.a];
-        const cfg = { ...DEFAULT_CIRCUIT, ...fd.circuits[fd.active] };
+        const cfg = effectiveCircuit(icao, fd.active, fd.circuits[fd.active]);
         const path = circuitPath(thr, end, cfg);
         L.polyline(path, { color: '#ffab00', weight: 3, dashArray: '10 6', interactive: false }).addTo(g);
         const mid: [number, number] = [(path[3][0] + path[4][0]) / 2, (path[3][1] + path[4][1]) / 2];

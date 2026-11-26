@@ -1,0 +1,586 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<OFMX-Snapshot xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://schema.openflightmaps.org/0.1/OFMX-Snapshot.xsd" version="0.1" origin="example" namespace="00000000-0000-0000-0000-000000000000" regions="EB" sourced="2018-01-01T08:00:00Z" created="2018-01-01T12:09:15Z" effective="2018-01-04T00:00:00Z" expiration="2018-02-01T00:00:00Z">
+  <Ahp source="EB|AD|1.3|2018-01-04|3857">
+    <AhpUid region="EB" mid="df97f099-d07d-04e6-adf8-e8294adaa0a3">
+      <codeId>EBAW</codeId>
+    </AhpUid>
+    <OrgUid region="EB" mid="7bb01973-fbaa-4fa3-9c21-b8c4686c6157">
+      <txtName>BELGIUM</txtName>
+    </OrgUid>
+    <txtName>ANTWERPEN/DEURNE</txtName>
+    <codeIcao>EBAW</codeIcao>
+    <codeIata>ANR</codeIata>
+    <codeGps>EBDEURNE</codeGps>
+    <codeType>AH</codeType>
+    <geoLat>51.18945833N</geoLat>
+    <geoLong>004.46039722E</geoLong>
+    <codeDatum>WGE</codeDatum>
+    <valElev>39</valElev>
+    <uomDistVer>FT</uomDistVer>
+    <txtNameCitySer>ANTWERPEN</txtNameCitySer>
+    <valMagVar>-1.02</valMagVar>
+    <dateMagVar>2017</dateMagVar>
+    <valMagVarChg>+0.1500</valMagVarChg>
+    <valRefT>22.1</valRefT>
+    <uomRefT>C</uomRefT>
+    <txtNameAdmin>MINISTERIE VAN DE VLAAMSE GEMEENSCHAP
+LUCHTHAVEN DEURNE</txtNameAdmin>
+    <valTransitionAlt>4500</valTransitionAlt>
+    <uomTransitionAlt>FT</uomTransitionAlt>
+    <Aht>
+      <codeWorkHr>H24</codeWorkHr>
+    </Aht>
+    <txtRmk>Medical emergency and SAR available</txtRmk>
+  </Ahp>
+
+  <Aha source="EB|AD|1.6|2018-01-04|1933">
+    <AhaUid mid="8166f450-ece2-37a5-f04d-5bd1643b8f31">
+      <AhpUid region="EB" mid="df97f099-d07d-04e6-adf8-e8294adaa0a3">
+        <codeId>EBAW</codeId>
+      </AhpUid>
+      <codeType>URL</codeType>
+      <noSeq>1</noSeq>
+    </AhaUid>
+    <txtAddress>antwerpairport.aero</txtAddress>
+  </Aha>
+
+  <Aha>
+    <AhaUid mid="6c3cc9ae-9e81-d588-1f0f-763a829283e9">
+      <AhpUid region="EB" mid="df97f099-d07d-04e6-adf8-e8294adaa0a3">
+        <codeId>EBAW</codeId>
+      </AhpUid>
+      <codeType>RADIO</codeType>
+      <noSeq>1</noSeq>
+    </AhaUid>
+    <txtAddress>135.2</txtAddress>
+    <txtRmk>A/A outside HOR TWR</txtRmk>
+  </Aha>
+
+  <Rwy>
+    <RwyUid mid="ef163b2a-b50e-4b65-1315-ee77bcf865dc">
+      <AhpUid region="EB" mid="df97f099-d07d-04e6-adf8-e8294adaa0a3">
+        <codeId>EBAW</codeId>
+      </AhpUid>
+      <txtDesig>11/29</txtDesig>
+    </RwyUid>
+    <valLen>1510</valLen>
+    <valWid>45</valWid>
+    <uomDimRwy>M</uomDimRwy>
+    <codeComposition>ASPH</codeComposition>
+    <codePreparation>PAVED</codePreparation>
+    <codeCondSfc>GOOD</codeCondSfc>
+    <valPcnClass>30</valPcnClass>
+    <codePcnPavementType>F</codePcnPavementType>
+    <codePcnPavementSubgrade>A</codePcnPavementSubgrade>
+    <codePcnMaxTirePressure>W</codePcnMaxTirePressure>
+    <codePcnEvalMethod>U</codePcnEvalMethod>
+    <txtPcnNote>Friction coefficient calibration: 0.74</txtPcnNote>
+    <valSiwlWeight>1500</valSiwlWeight>
+    <uomSiwlWeight>KG</uomSiwlWeight>
+    <valSiwlTirePressure>0.5</valSiwlTirePressure>
+    <uomSiwlTirePressure>MPA</uomSiwlTirePressure>
+    <valAuwWeight>30</valAuwWeight>
+    <uomAuwWeight>T</uomAuwWeight>
+    <valLenStrip>1630</valLenStrip>
+    <valWidStrip>300</valWidStrip>
+    <uomDimStrip>M</uomDimStrip>
+    <codeSts>SPOWER</codeSts>
+    <txtRmk>A grass strip of 600 x 18 m is available next to the RWY for ACFT with MTOW below 2000 kg. PPR only.</txtRmk>
+  </Rwy>
+
+  <Rcp>
+    <RcpUid mid="d9c57402-8b7e-d64b-3851-1c534c19d76c">
+      <RwyUid mid="ef163b2a-b50e-4b65-1315-ee77bcf865dc">
+        <AhpUid region="EB" mid="df97f099-d07d-04e6-adf8-e8294adaa0a3">
+          <codeId>EBAW</codeId>
+        </AhpUid>
+        <txtDesig>11/29</txtDesig>
+      </RwyUid>
+      <geoLat>51.19229722N</geoLat>
+      <geoLong>004.452825E</geoLong>
+    </RcpUid>
+    <codeDatum>WGE</codeDatum>
+    <valElev>148</valElev>
+    <uomDistVer>FT</uomDistVer>
+    <txtRmk>Estimation</txtRmk>
+  </Rcp>
+
+  <Rcp>
+    <RcpUid mid="ced7e6bc-59d1-bb58-b4c9-bf0a9c3095da">
+      <RwyUid mid="ef163b2a-b50e-4b65-1315-ee77bcf865dc">
+        <AhpUid region="EB" mid="df97f099-d07d-04e6-adf8-e8294adaa0a3">
+          <codeId>EBAW</codeId>
+        </AhpUid>
+        <txtDesig>11/29</txtDesig>
+      </RwyUid>
+      <geoLat>51.18770833N</geoLat>
+      <geoLong>004.47318056E</geoLong>
+    </RcpUid>
+    <codeDatum>WGE</codeDatum>
+    <valElev>148</valElev>
+    <uomDistVer>FT</uomDistVer>
+    <txtRmk>Estimation</txtRmk>
+  </Rcp>
+
+  <Rdn>
+    <RdnUid mid="74a75842-952e-6b41-b7aa-e576586324c9">
+      <RwyUid mid="ef163b2a-b50e-4b65-1315-ee77bcf865dc">
+        <AhpUid region="EB" mid="df97f099-d07d-04e6-adf8-e8294adaa0a3">
+          <codeId>EBAW</codeId>
+        </AhpUid>
+        <txtDesig>11/29</txtDesig>
+      </RwyUid>
+      <txtDesig>11</txtDesig>
+    </RdnUid>
+    <geoLat>51.19186111N</geoLat>
+    <geoLong>004.454775E</geoLong>
+    <valTrueBrg>109.8</valTrueBrg>
+    <valMagBrg>112</valMagBrg>
+    <valElevTdz>39</valElevTdz>
+    <uomElevTdz>FT</uomElevTdz>
+    <codeTypeVasis>PAPI</codeTypeVasis>
+    <codePsnVasis>LEFT</codePsnVasis>
+    <noBoxVasis>4</noBoxVasis>
+    <codePortableVasis>N</codePortableVasis>
+    <valSlopeAngleGpVasis>6</valSlopeAngleGpVasis>
+    <valMeht>40</valMeht>
+    <uomMeht>FT</uomMeht>
+    <codeVfrPattern>E</codeVfrPattern>
+    <txtRmk>Surface repairs at THR</txtRmk>
+  </Rdn>
+
+  <Rdn>
+    <RdnUid mid="d959eeb1-c260-8d4b-0eef-d78968844432">
+      <RwyUid mid="ef163b2a-b50e-4b65-1315-ee77bcf865dc">
+        <AhpUid region="EB" mid="df97f099-d07d-04e6-adf8-e8294adaa0a3">
+          <codeId>EBAW</codeId>
+        </AhpUid>
+        <txtDesig>11/29</txtDesig>
+      </RwyUid>
+      <txtDesig>29</txtDesig>
+    </RdnUid>
+    <geoLat>51.18773611N</geoLat>
+    <geoLong>004.47306389E</geoLong>
+    <valTrueBrg>289.8</valTrueBrg>
+    <valMagBrg>292</valMagBrg>
+    <valElevTdz>39</valElevTdz>
+    <uomElevTdz>FT</uomElevTdz>
+    <codeTypeVasis>PAPI</codeTypeVasis>
+    <codePsnVasis>LEFT</codePsnVasis>
+    <noBoxVasis>4</noBoxVasis>
+    <codePortableVasis>N</codePortableVasis>
+    <valSlopeAngleGpVasis>6</valSlopeAngleGpVasis>
+    <valMeht>40</valMeht>
+    <uomMeht>FT</uomMeht>
+    <codeVfrPattern>E</codeVfrPattern>
+    <txtRmk>Surface repairs at THR</txtRmk>
+  </Rdn>
+
+  <Rdd>
+    <RddUid mid="3e7e8c05-07ee-f1a9-7844-5ff055eedc26">
+      <RdnUid mid="74a75842-952e-6b41-b7aa-e576586324c9">
+        <RwyUid mid="ef163b2a-b50e-4b65-1315-ee77bcf865dc">
+          <AhpUid region="EB" mid="df97f099-d07d-04e6-adf8-e8294adaa0a3">
+            <codeId>EBAW</codeId>
+          </AhpUid>
+          <txtDesig>11/29</txtDesig>
+        </RwyUid>
+        <txtDesig>11</txtDesig>
+      </RdnUid>
+      <codeType>LDA</codeType>
+      <codeDayPeriod>A</codeDayPeriod>
+    </RddUid>
+    <valDist>1366</valDist>
+    <uomDist>M</uomDist>
+    <txtRmk>Under evaluation</txtRmk>
+  </Rdd>
+
+  <Rdo>
+    <RdoUid mid="109e5366-389c-373f-8302-6a39aadb22c4">
+      <ObsUid mid="3c4b4c67-067c-be56-47fe-978da6aaf010">
+        <OgrUid region="EB" mid="c06fe65a-71ef-ba4b-de09-af05d5229b31">
+          <txtName>EBAW 29 VEGETATION</txtName>
+          <geoLat>51.18670400N</geoLat>
+          <geoLong>004.47645800E</geoLong>
+        </OgrUid>
+        <geoLat>51.1871713N</geoLat>
+        <geoLong>004.4731193E</geoLong>
+      </ObsUid>
+      <RdnUid mid="74a75842-952e-6b41-b7aa-e576586324c9">
+        <RwyUid mid="ef163b2a-b50e-4b65-1315-ee77bcf865dc">
+          <AhpUid region="EB" mid="df97f099-d07d-04e6-adf8-e8294adaa0a3">
+            <codeId>EBAW</codeId>
+          </AhpUid>
+          <txtDesig>11/29</txtDesig>
+        </RwyUid>
+        <txtDesig>11</txtDesig>
+      </RdnUid>
+    </RdoUid>
+    <codeTypeOps>TKOF</codeTypeOps>
+    <txtRmk>Trees</txtRmk>
+  </Rdo>
+
+  <Rda>
+    <RdaUid mid="c4fd62e4-6a29-2f31-d7bd-f84b6812c5e4">
+      <RdnUid mid="74a75842-952e-6b41-b7aa-e576586324c9">
+        <RwyUid mid="ef163b2a-b50e-4b65-1315-ee77bcf865dc">
+          <AhpUid region="EB" mid="df97f099-d07d-04e6-adf8-e8294adaa0a3">
+            <codeId>EBAW</codeId>
+          </AhpUid>
+          <txtDesig>11/29</txtDesig>
+        </RwyUid>
+        <txtDesig>11</txtDesig>
+      </RdnUid>
+      <codeType>E</codeType>
+    </RdaUid>
+    <valLen>900</valLen>
+    <uomLen>M</uomLen>
+    <codeIntst>LIH</codeIntst>
+    <codeSequencedFlash>N</codeSequencedFlash>
+    <txtDescrFlash>Barette</txtDescrFlash>
+    <txtRmk>LED lighting</txtRmk>
+  </Rda>
+
+  <Rls>
+    <RlsUid mid="962a2cd6-6a06-3910-ff48-3e4e783f2ea3">
+      <RdnUid mid="74a75842-952e-6b41-b7aa-e576586324c9">
+        <RwyUid mid="ef163b2a-b50e-4b65-1315-ee77bcf865dc">
+          <AhpUid region="EB" mid="df97f099-d07d-04e6-adf8-e8294adaa0a3">
+            <codeId>EBAW</codeId>
+          </AhpUid>
+          <txtDesig>11/29</txtDesig>
+        </RwyUid>
+        <txtDesig>11</txtDesig>
+      </RdnUid>
+      <codePsn>CL</codePsn>
+    </RlsUid>
+    <txtDescr>Length 1358 m, spacing 15 m</txtDescr>
+    <codeIntst>LIM</codeIntst>
+    <codeColour>WHI</codeColour>
+    <txtRmk>LED lighting</txtRmk>
+  </Rls>
+
+  <Fto>
+    <FtoUid mid="7b2dd425-71d2-e18d-bbd8-20feb2110595">
+      <AhpUid region="EB" mid="df97f099-d07d-04e6-adf8-e8294adaa0a3">
+        <codeId>EBAW</codeId>
+      </AhpUid>
+      <txtDesig>EBAW FATO</txtDesig>
+    </FtoUid>
+    <valLen>40</valLen>
+    <valWid>40</valWid>
+    <valMaxDim>16</valMaxDim>
+    <uomDim>M</uomDim>
+    <codeComposition>ASPH</codeComposition>
+    <codePreparation>PAVED</codePreparation>
+    <codeCondSfc>GOOD</codeCondSfc>
+    <valPcnClass>30</valPcnClass>
+    <codePcnPavementType>F</codePcnPavementType>
+    <codePcnPavementSubgrade>A</codePcnPavementSubgrade>
+    <codePcnMaxTirePressure>W</codePcnMaxTirePressure>
+    <codePcnEvalMethod>U</codePcnEvalMethod>
+    <txtPcnNote>Friction coefficient calibration: 0.74</txtPcnNote>
+    <valSiwlWeight>800</valSiwlWeight>
+    <uomSiwlWeight>KG</uomSiwlWeight>
+    <valSiwlTirePressure>0.5</valSiwlTirePressure>
+    <uomSiwlTirePressure>MPA</uomSiwlTirePressure>
+    <valAuwWeight>3</valAuwWeight>
+    <uomAuwWeight>T</uomAuwWeight>
+    <txtProfile>Northwest from RWY 11/29</txtProfile>
+    <txtMarking>Dashed white lines</txtMarking>
+    <codeSts>FAILAID</codeSts>
+    <txtRmk>Square area</txtRmk>
+  </Fto>
+
+  <Fdn>
+    <FdnUid mid="60461620-ef74-02b0-ac23-c905f0761914">
+      <FtoUid mid="7b2dd425-71d2-e18d-bbd8-20feb2110595">
+        <AhpUid region="EB" mid="df97f099-d07d-04e6-adf8-e8294adaa0a3">
+          <codeId>EBAW</codeId>
+        </AhpUid>
+        <txtDesig>EBAW FATO</txtDesig>
+      </FtoUid>
+      <txtDesig>11</txtDesig>
+    </FdnUid>
+    <valTrueBrg>109.8</valTrueBrg>
+    <valMagBrg>112</valMagBrg>
+    <codeTypeVasis>HAPI</codeTypeVasis>
+    <codePsnVasis>LEFT</codePsnVasis>
+    <noBoxVasis>1</noBoxVasis>
+    <codePortableVasis>Y</codePortableVasis>
+    <valSlopeAngleGpVasis>6</valSlopeAngleGpVasis>
+    <valMeht>40</valMeht>
+    <uomMeht>FT</uomMeht>
+    <codeRearTakeOffSectorAvbl>Y</codeRearTakeOffSectorAvbl>
+    <valRearTakeOffSectorTrueBrg>091.1</valRearTakeOffSectorTrueBrg>
+    <valRearTakeOffSectorSlopeAngle>45</valRearTakeOffSectorSlopeAngle>
+    <codeCodingMode>PARA</codeCodingMode>
+    <geoLatIap>51.19045412N</geoLatIap>
+    <geoLongIap>004.45436201E</geoLongIap>
+    <valAltIap>220</valAltIap>
+    <uomAltIap>FT</uomAltIap>
+    <valMaxSectorLen>1000</valMaxSectorLen>
+    <uomMaxSectorLen>M</uomMaxSectorLen>
+    <valSlopeAngle>10</valSlopeAngle>
+    <valOpeningAngle>30</valOpeningAngle>
+    <bezierSectorExtent>004.43848530,51.19076910 004.43848530,51.19076910 004.43847926,51.19051761 004.43847926,51.19051761 004.45160054,51.18910359 004.45185758,51.18910578 004.45185758,51.18910578 004.45192846,51.19186164 004.45167133,51.19186998 004.45167133,51.19186998 004.45167133,51.19186998 004.43848530,51.19076910 004.43848530,51.19076910</bezierSectorExtent>
+    <bezierSectorCentreLine>004.43866760,51.19064116 004.43866760,51.19064116 004.45436201,51.19045412 004.45436201,51.19045412</bezierSectorCentreLine>
+    <valDistVerLandingDecision>1000</valDistVerLandingDecision>
+    <valDistVerTakeOffDecision>300</valDistVerTakeOffDecision>
+    <uomDistVer>FT</uomDistVer>
+    <txtRmk>Sector 290 deg to FATO 11</txtRmk>
+  </Fdn>
+
+  <Fdd>
+    <FddUid mid="d639dd24-7c73-bb20-3ef1-ddc0b2f0b20c">
+      <FdnUid mid="60461620-ef74-02b0-ac23-c905f0761914">
+        <FtoUid mid="7b2dd425-71d2-e18d-bbd8-20feb2110595">
+          <AhpUid region="EB" mid="df97f099-d07d-04e6-adf8-e8294adaa0a3">
+            <codeId>EBAW</codeId>
+          </AhpUid>
+          <txtDesig>EBAW FATO</txtDesig>
+        </FtoUid>
+        <txtDesig>11</txtDesig>
+      </FdnUid>
+      <codeType>LDAH</codeType>
+      <codeDayPeriod>D</codeDayPeriod>
+    </FddUid>
+    <valDist>121</valDist>
+    <uomDist>M</uomDist>
+    <txtRmk>Under re-evaluation</txtRmk>
+  </Fdd>
+
+  <Fdo>
+    <FdoUid mid="110fd28f-a4f2-17cb-ed39-8dee293ca5b4">
+      <ObsUid mid="94057ba0-f9b7-4244-c957-feca24e0fd9f">
+        <OgrUid region="EB" mid="f6bc40eb-61c2-00e1-e3b6-a9e02c958938">
+          <txtName>PARKING 20 THRU 25</txtName>
+          <geoLat>51.1904589N</geoLat>
+          <geoLong>004.4534767E</geoLong>
+        </OgrUid>
+        <geoLat>51.1904589N</geoLat>
+        <geoLong>004.4534767E</geoLong>
+      </ObsUid>
+      <FdnUid mid="60461620-ef74-02b0-ac23-c905f0761914">
+        <FtoUid mid="7b2dd425-71d2-e18d-bbd8-20feb2110595">
+          <AhpUid region="EB" mid="df97f099-d07d-04e6-adf8-e8294adaa0a3">
+            <codeId>EBAW</codeId>
+          </AhpUid>
+          <txtDesig>EBAW FATO</txtDesig>
+        </FtoUid>
+        <txtDesig>11</txtDesig>
+      </FdnUid>
+    </FdoUid>
+    <codeTypeOps>APCH</codeTypeOps>
+    <txtRmk>Windsock</txtRmk>
+  </Fdo>
+
+  <Fda>
+    <FdaUid mid="4b5aef0a-0142-dbbe-cf01-b02f97483003">
+      <FdnUid mid="60461620-ef74-02b0-ac23-c905f0761914">
+        <FtoUid mid="7b2dd425-71d2-e18d-bbd8-20feb2110595">
+          <AhpUid region="EB" mid="df97f099-d07d-04e6-adf8-e8294adaa0a3">
+            <codeId>EBAW</codeId>
+          </AhpUid>
+          <txtDesig>EBAW FATO</txtDesig>
+        </FtoUid>
+        <txtDesig>11</txtDesig>
+      </FdnUid>
+      <codeType>SSALS</codeType>
+    </FdaUid>
+    <valLen>12</valLen>
+    <uomLen>M</uomLen>
+    <codeIntst>LIL</codeIntst>
+    <codeSequencedFlash>N</codeSequencedFlash>
+    <txtDescrFlash>Portable</txtDescrFlash>
+  </Fda>
+
+  <Fls>
+    <FlsUid mid="bf628494-900b-5c6a-b05c-ec95f3160d09">
+      <FdnUid mid="60461620-ef74-02b0-ac23-c905f0761914">
+        <FtoUid mid="7b2dd425-71d2-e18d-bbd8-20feb2110595">
+          <AhpUid region="EB" mid="df97f099-d07d-04e6-adf8-e8294adaa0a3">
+            <codeId>EBAW</codeId>
+          </AhpUid>
+          <txtDesig>EBAW FATO</txtDesig>
+        </FtoUid>
+        <txtDesig>11</txtDesig>
+      </FdnUid>
+      <codePsn>CL</codePsn>
+    </FlsUid>
+    <txtDescr>No detailed description available</txtDescr>
+    <codeIntst>LIM</codeIntst>
+    <codeColour>RED</codeColour>
+    <txtRmk>LED lighting</txtRmk>
+  </Fls>
+
+  <Tla>
+    <TlaUid mid="b926be29-4979-d2a2-1e22-7dc8e772f508">
+      <AhpUid region="EB" mid="df97f099-d07d-04e6-adf8-e8294adaa0a3">
+        <codeId>EBAW</codeId>
+      </AhpUid>
+      <txtDesig>H1</txtDesig>
+    </TlaUid>
+    <FtoUid mid="7b2dd425-71d2-e18d-bbd8-20feb2110595">
+      <AhpUid region="EB" mid="df97f099-d07d-04e6-adf8-e8294adaa0a3">
+        <codeId>EBAW</codeId>
+      </AhpUid>
+      <txtDesig>EBAW FATO</txtDesig>
+    </FtoUid>
+    <geoLat>51.19019167N</geoLat>
+    <geoLong>004.45407222E</geoLong>
+    <codeDatum>WGE</codeDatum>
+    <valTrueBrg>038.3</valTrueBrg>
+    <valElev>39</valElev>
+    <uomDistVer>FT</uomDistVer>
+    <valLen>30</valLen>
+    <valWid>30</valWid>
+    <uomDim>M</uomDim>
+    <codeComposition>ASPH</codeComposition>
+    <codePreparation>PAVED</codePreparation>
+    <codeCondSfc>GOOD</codeCondSfc>
+    <valPcnClass>30</valPcnClass>
+    <codePcnPavementType>F</codePcnPavementType>
+    <codePcnPavementSubgrade>A</codePcnPavementSubgrade>
+    <codePcnMaxTirePressure>W</codePcnMaxTirePressure>
+    <codePcnEvalMethod>U</codePcnEvalMethod>
+    <txtPcnNote>Friction coefficient calibration: 0.74</txtPcnNote>
+    <valSiwlWeight>800</valSiwlWeight>
+    <uomSiwlWeight>KG</uomSiwlWeight>
+    <valSiwlTirePressure>0.5</valSiwlTirePressure>
+    <uomSiwlTirePressure>MPA</uomSiwlTirePressure>
+    <valAuwWeight>3</valAuwWeight>
+    <uomAuwWeight>T</uomAuwWeight>
+    <codeClassHel>1</codeClassHel>
+    <txtMarking>Continuous white lines</txtMarking>
+    <codeSts>FAILAID</codeSts>
+    <txtRmk>Circular area</txtRmk>
+  </Tla>
+
+  <Tls>
+    <TlsUid mid="2e295f48-14d3-ca8d-cb57-8d844993db16">
+      <TlaUid mid="b926be29-4979-d2a2-1e22-7dc8e772f508">
+        <AhpUid region="EB" mid="df97f099-d07d-04e6-adf8-e8294adaa0a3">
+          <codeId>EBAW</codeId>
+        </AhpUid>
+        <txtDesig>H1</txtDesig>
+      </TlaUid>
+      <codePsn>OTHER</codePsn>
+    </TlsUid>
+    <txtDescr>Floodlighting</txtDescr>
+    <codeIntst>LIM</codeIntst>
+    <codeColour>WHI</codeColour>
+    <txtRmk>LED lighting</txtRmk>
+  </Tls>
+
+  <Ahu>
+    <AhuUid mid="911690f6-5176-2205-3353-6deb2c4baf9e">
+      <AhpUid region="EB" mid="df97f099-d07d-04e6-adf8-e8294adaa0a3">
+        <codeId>EBAW</codeId>
+      </AhpUid>
+    </AhuUid>
+    <UsageLimitation>
+      <codeUsageLimitation>PERMIT</codeUsageLimitation>
+      <UsageCondition>
+        <FlightClass>
+          <codeRule>IV</codeRule>
+          <codeMil>CIVIL</codeMil>
+          <codeOrigin>ANY</codeOrigin>
+          <codePurpose>TRG</codePurpose>
+        </FlightClass>
+      </UsageCondition>
+      <Timetable>
+        <codeWorkHr>H24</codeWorkHr>
+      </Timetable>
+      <txtRmk>1. MIL JET ACFT: Local training flights prohibited.</txtRmk>
+    </UsageLimitation>
+    <UsageLimitation>
+      <codeUsageLimitation>FORBID</codeUsageLimitation>
+      <UsageCondition>
+        <AircraftClass>
+          <codeType>E</codeType>
+        </AircraftClass>
+        <FlightClass>
+          <codeMil>CIVIL</codeMil>
+        </FlightClass>
+      </UsageCondition>
+      <UsageCondition>
+        <AircraftClass>
+          <codeType>U</codeType>
+        </AircraftClass>
+      </UsageCondition>
+      <Timetable>
+        <codeWorkHr>H24</codeWorkHr>
+      </Timetable>
+      <txtRmk>Exceptions for MIL on request</txtRmk>
+    </UsageLimitation>
+    <UsageLimitation>
+      <codeUsageLimitation>RESERV</codeUsageLimitation>
+      <UsageCondition>
+        <AircraftClass>
+          <codeType>H</codeType>
+        </AircraftClass>
+      </UsageCondition>
+      <Timetable>
+        <codeWorkHr>H24</codeWorkHr>
+      </Timetable>
+      <txtRmk>PPR at least 24 hrs prior to ARR, contact info@antwerpairport.aero or +32 3 285 65 00.</txtRmk>
+    </UsageLimitation>
+  </Ahu>
+
+  <Ahs>
+    <AhsUid mid="5dbd38a8-4e10-04b0-06a4-ab0261732f31">
+      <AhpUid region="EB" mid="df97f099-d07d-04e6-adf8-e8294adaa0a3">
+        <codeId>EBAW</codeId>
+      </AhpUid>
+      <codeType>CUST</codeType>
+    </AhsUid>
+    <txtDescrFac>Quarantine for animals</txtDescrFac>
+    <Ast>
+      <codeWorkHr>HO</codeWorkHr>
+    </Ast>
+    <txtRmk>On request only</txtRmk>
+  </Ahs>
+
+  <Aga>
+    <AgaUid mid="5493b7ea-94c4-1ea1-bd1a-759d6e03ffb1">
+      <AhsUid mid="5dbd38a8-4e10-04b0-06a4-ab0261732f31">
+        <AhpUid region="EB" mid="df97f099-d07d-04e6-adf8-e8294adaa0a3">
+          <codeId>EBAW</codeId>
+        </AhpUid>
+        <codeType>CUST</codeType>
+      </AhsUid>
+      <codeType>EMAIL</codeType>
+      <noSeq>1</noSeq>
+    </AgaUid>
+    <txtAddress>customs@antwerpairport.aero</txtAddress>
+    <txtRmk>Answered on WD only</txtRmk>
+  </Aga>
+
+  <Ful>
+    <FulUid mid="00f5a836-57c7-1fd8-6a45-c3059a1a058f">
+      <AhpUid region="EB" mid="df97f099-d07d-04e6-adf8-e8294adaa0a3">
+        <codeId>EBAW</codeId>
+      </AhpUid>
+      <codeCat>A1</codeCat>
+    </FulUid>
+    <txtDescr>JET A1 all types</txtDescr>
+    <txtRmk>2 trucks (33 and 40 m3)</txtRmk>
+  </Ful>
+
+  <Sah>
+    <SahUid mid="df12b067-0428-993e-5c54-6b72897a1937">
+      <AhpUid region="EB" mid="df97f099-d07d-04e6-adf8-e8294adaa0a3">
+        <codeId>EBAW</codeId>
+      </AhpUid>
+      <SerUid mid="2ed6edc9-93aa-b348-7faa-52d094aa1c19">
+        <UniUid region="EB" mid="6b90a80d-0747-d1f4-22d2-3022f3a795ce">
+          <txtName>ANTWERP</txtName>
+          <codeType>TWR</codeType>
+        </UniUid>
+        <codeType>TWR</codeType>
+        <noSeq>1</noSeq>
+      </SerUid>
+    </SahUid>
+  </Sah>
+</OFMX-Snapshot>

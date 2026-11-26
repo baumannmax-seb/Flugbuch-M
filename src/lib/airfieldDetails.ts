@@ -9,6 +9,8 @@
 import { db } from './db';
 import { destination, distance, bearing } from './geo';
 import type { Airfield } from './airfields';
+import { ofmxAirport, ofmxMeta } from './ofmxStore';
+import type { OfmxReportingPoint } from './ofmx';
 
 export interface Runway {
   le: string; // z.B. "08"
@@ -31,6 +33,13 @@ export interface AirfieldDetails {
   type?: string;
   runways: Runway[];
   freqs: { type: string; desc: string; mhz: string }[];
+  /** Platzrundenrichtung je Landerichtung laut openflightmaps (L/R/E) */
+  patterns?: Record<string, 'L' | 'R' | 'E'>;
+  /** VFR-Meldepunkte (openflightmaps) */
+  rps?: OfmxReportingPoint[];
+  rmk?: string;
+  addresses?: { type: string; value: string; rmk?: string }[];
+  source: 'ofm' | 'ourairports';
 }
 
 type Raw = Record<string, { city?: string; web?: string; wiki?: string; type?: string; rw?: (string | number | null)[][]; fq?: string[][] }>;
@@ -47,10 +56,57 @@ export function loadDetails(): Promise<Raw> {
   return loading;
 }
 
+/** Details aus openflightmaps (falls importiert), sonst OurAirports */
 export function getDetailsSync(icao: string): AirfieldDetails | null {
+  const o = ofmxAirport(icao);
+  const d = raw?.[icao];
+  if (o) {
+    const patterns: Record<string, 'L' | 'R' | 'E'> = {};
+    const runways: Runway[] = o.runways.map((r) => {
+      const [a, b] = r.dirs;
+      for (const x of r.dirs) if (x.pattern) patterns[x.desig] = x.pattern;
+      const [le, he] = r.desig.split('/');
+      return {
+        le: a?.desig ?? le ?? r.desig,
+        he: b?.desig ?? he ?? '',
+        lengthFt: Math.round((r.lenM ?? 0) / 0.3048),
+        widthFt: Math.round((r.widM ?? 0) / 0.3048),
+        surface: r.surface,
+        lighted: false,
+        leLat: a?.lat ?? null,
+        leLon: a?.lon ?? null,
+        heLat: b?.lat ?? null,
+        heLon: b?.lon ?? null,
+        leHdg: a?.trueBrg ?? null,
+      };
+    });
+    return {
+      city: o.city || d?.city,
+      web: o.addresses.find((x) => x.type === 'URL')?.value ?? d?.web,
+      wiki: d?.wiki,
+      type: o.type,
+      runways: runways.length ? runways : getDetailsSyncOA(icao)?.runways ?? [],
+      freqs: o.freqs.length ? o.freqs.map((f) => ({ type: f.service, desc: f.callsign, mhz: f.mhz })) : getDetailsSyncOA(icao)?.freqs ?? [],
+      patterns,
+      rps: o.rps,
+      rmk: o.rmk,
+      addresses: o.addresses,
+      source: 'ofm',
+    };
+  }
+  return getDetailsSyncOA(icao);
+}
+
+export const ofmSourceLabel = () => {
+  const m = ofmxMeta();
+  return m ? `openflightmaps${m.effective ? ', gültig ab ' + new Date(m.effective).toLocaleDateString('de-DE') : ''}` : '';
+};
+
+function getDetailsSyncOA(icao: string): AirfieldDetails | null {
   const d = raw?.[icao];
   if (!d) return null;
   return {
+    source: 'ourairports',
     city: d.city,
     web: d.web,
     wiki: d.wiki,
@@ -99,13 +155,25 @@ export interface CircuitCfg {
   altFt: string; // Freitext, z.B. "1000 ft MSL"
 }
 export interface FieldUserData {
-  circuits: Record<string, CircuitCfg>; // Key: Landerichtung, z.B. "26"
+  circuits: Record<string, Partial<CircuitCfg>>; // Key: Landerichtung, z.B. "26" (nur geänderte Werte)
   active: string | null; // Landerichtung, deren Platzrunde auf der Karte gezeigt wird
   notes: string;
   docs: { id: string; name: string; type: string }[]; // eigene Anflugkarten
 }
 
 export const DEFAULT_CIRCUIT: CircuitCfg = { dir: 'L', offsetM: 1200, altFt: '' };
+
+/** Wirksame Platzrunden-Einstellung: Standard ← openflightmaps-Richtung ← eigene Einstellung */
+export function effectiveCircuit(icao: string, rwyDir: string, user?: Partial<CircuitCfg>): CircuitCfg & { dirSource: 'ofm' | 'user' | 'default' } {
+  const p = getDetailsSync(icao)?.patterns?.[rwyDir];
+  const ofmDir = p === 'L' || p === 'R' ? p : undefined;
+  return {
+    ...DEFAULT_CIRCUIT,
+    ...(ofmDir ? { dir: ofmDir } : {}),
+    ...user,
+    dirSource: user?.dir ? 'user' : ofmDir ? 'ofm' : 'default',
+  };
+}
 
 export async function getFieldData(icao: string): Promise<FieldUserData> {
   const d = await db.get<FieldUserData>(`field:${icao}`);

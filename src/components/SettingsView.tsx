@@ -3,6 +3,7 @@ import { exportBackup } from '../lib/export';
 import { DEFAULT_SETTINGS } from '../lib/flightDetector';
 import type { AppSettings } from '../lib/settings';
 import MapSettings from './MapSettings';
+import OfmxSettings from './OfmxSettings';
 import { AircraftSettings, InstructorSettings } from './FleetSettings';
 
 export default function SettingsView({ settings, onChange, onDataChanged }: { settings: AppSettings; onChange: (s: AppSettings) => void; onDataChanged: () => void }) {
@@ -50,6 +51,7 @@ export default function SettingsView({ settings, onChange, onDataChanged }: { se
       <InstructorSettings settings={settings} onChange={onChange} />
 
       <MapSettings settings={settings} onChange={onChange} />
+      <OfmxSettings />
 
       <div className="card">
         <h2>Automatische Erkennung</h2>
@@ -80,7 +82,7 @@ export default function SettingsView({ settings, onChange, onDataChanged }: { se
         </div>
       </div>
       <p className="small muted settings-foot" style={{ textAlign: 'center' }}>
-        Platzrunde · Draft v0.2 · Flugplatzdaten: OurAirports (Public Domain) · Karten © OpenStreetMap / OpenTopoMap / openAIP
+        Platzrunde · Draft v0.2 · Flugplatzdaten: OurAirports (Public Domain), optional openflightmaps · Karten © OpenStreetMap / OpenTopoMap / openAIP
         <br />
         Kein zugelassenes Navigationsgerät – nur zur Unterstützung.
       </p>
