@@ -1,6 +1,6 @@
-# Flugbuch M ✈️
+# Platzrunde ✈️ – Flugbuch & Navi
 
-Digitales Flugbuch (UL / SEP) mit **GPS-Aufzeichnung**, **automatischer Erkennung von Start, Landung,
+**Platzrunde** ist ein digitales Flugbuch (UL / SEP) mit **GPS-Aufzeichnung**, **automatischer Erkennung von Start, Landung,
 Touch-and-Go und Full-Stop** – ohne etwas tippen zu müssen – und einem **Vollbild-Navi (Moving Map)**.
 
 > Status: Draft / Prototyp als Web-App (PWA). Läuft im Browser auf iPhone, Android und Desktop und lässt

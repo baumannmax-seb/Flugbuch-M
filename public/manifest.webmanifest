@@ -1,14 +1,16 @@
 {
-  "name": "Flugbuch M",
-  "short_name": "Flugbuch",
+  "name": "Platzrunde – Flugbuch & Navi",
+  "short_name": "Platzrunde",
   "description": "Flugbuch mit GPS-Aufzeichnung, automatischer Start/Landungs-Erkennung und Moving Map",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
   "orientation": "any",
-  "background_color": "#0b1d33",
-  "theme_color": "#0b1d33",
+  "background_color": "#f6efe4",
+  "theme_color": "#f6efe4",
   "icons": [
-    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" },
+    { "src": "icon-180.png", "sizes": "180x180", "type": "image/png" }
   ]
 }

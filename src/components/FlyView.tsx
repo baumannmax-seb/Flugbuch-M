@@ -13,6 +13,7 @@ export default function FlyView({ recorder, rec, settings, onOpenNav, onShowLog 
   const [simField, setSimField] = useState<Airfield | null>(null);
   const [pickSim, setPickSim] = useState(false);
   const [speedup, setSpeedup] = useState(10);
+  const [simOpen, setSimOpen] = useState(false);
 
   const startGps = () => {
     recorder.aircraftReg = reg;
@@ -32,11 +33,12 @@ export default function FlyView({ recorder, rec, settings, onOpenNav, onShowLog 
     const s = rec.snap;
     return (
       <>
-        <div className="card">
-          <h2>Aufzeichnung läuft {rec.source === 'sim' && '(Simulator)'}</h2>
-          <p style={{ fontSize: 22, margin: '4px 0 10px' }}>
-            <b>{s ? PHASE_TXT[s.phase] : '–'}</b>
+        <div>
+          <p className="eyebrow" style={{ marginTop: 8 }}>
+            <span className="rec-dot" style={{ width: 12, height: 12, boxShadow: 'none', marginRight: 8, verticalAlign: 0 }} />
+            Aufzeichnung läuft {rec.source === 'sim' && '· Simulator'}
           </p>
+          <p className="serif" style={{ fontSize: 34, fontWeight: 700, margin: '0 0 6px' }}>{s ? PHASE_TXT[s.phase] : '–'}</p>
           <div className="kpis">
             <div className="kpi"><div className="v">{fmtDuration(s?.airborneMs ?? 0)}</div><div className="l">Flugzeit</div></div>
             <div className="kpi"><div className="v">{s?.landings ?? 0}</div><div className="l">Landungen</div></div>
@@ -44,7 +46,7 @@ export default function FlyView({ recorder, rec, settings, onOpenNav, onShowLog 
           </div>
           <p className="small muted">{rec.points.length} GPS-Punkte · Flug endet automatisch {Math.round(settings.detector.flightEndSec / 60)} min nach der letzten Landung im Stillstand.</p>
           {rec.error && <div className="err">{rec.error}</div>}
-          <button className="primary big" onClick={onOpenNav}>🗺️ Navi / Moving Map öffnen</button>
+          <button className="primary big" onClick={onOpenNav}>Navi / Moving Map öffnen</button>
           <div style={{ height: 8 }} />
           <button className="danger big" onClick={() => confirm('Aufzeichnung jetzt beenden?') && recorder.stop()}>Aufzeichnung beenden</button>
         </div>
@@ -52,92 +54,122 @@ export default function FlyView({ recorder, rec, settings, onOpenNav, onShowLog 
     );
   }
 
+  const ac = settings.aircraft.find((a) => a.reg === reg);
   return (
     <>
       {rec.savedEntryId && (
-        <div className="card" style={{ borderColor: 'var(--ok)' }}>
-          <h2 className="status-ok">✓ Flug gespeichert</h2>
-          <p style={{ margin: '0 0 10px' }}>
+        <div className="ok-box" style={{ marginBottom: 14 }}>
+          <b className="serif" style={{ fontSize: 19 }}>✓ Flug gespeichert</b>
+          <div style={{ margin: '4px 0 8px' }}>
             {rec.snap?.landings} Landung(en), davon {rec.snap?.touchAndGos} Touch-and-Go · Flugzeit {fmtDuration(rec.snap?.airborneMs ?? 0)}
-          </p>
-          <button onClick={onShowLog}>Im Flugbuch ansehen</button>
+          </div>
+          <button className="link" onClick={onShowLog}>Im Flugbuch ansehen</button>
         </div>
       )}
       {rec.snap && !rec.savedEntryId && rec.snap.takeoffs === 0 && (
-        <div className="card muted">Letzte Aufzeichnung enthielt keinen Start – kein Eintrag angelegt.</div>
+        <div className="err">Letzte Aufzeichnung enthielt keinen Start – kein Eintrag angelegt.</div>
       )}
-      <div className="card">
-        <h2>Flug aufzeichnen</h2>
+
+      <p className="eyebrow" style={{ marginTop: 8 }}>Luftfahrzeug</p>
+      <div className="ac-select">
+        <span className="reg">{reg || '—'}</span>
+        <span className="type">{ac?.type || (settings.aircraft.length ? 'auswählen' : 'in Einstellungen anlegen')}</span>
+        <span className="chev" />
+        <select value={reg} onChange={(e) => setReg(e.target.value)} aria-label="Luftfahrzeug">
+          <option value="">– ohne –</option>
+          {settings.aircraft.map((a) => (
+            <option key={a.reg} value={a.reg}>{a.reg} · {a.type}</option>
+          ))}
+        </select>
+      </div>
+
+      <div className="grid2" style={{ marginTop: 14 }}>
         <label>
-          Luftfahrzeug
-          <select value={reg} onChange={(e) => setReg(e.target.value)}>
-            <option value="">– ohne –</option>
-            {settings.aircraft.map((a) => (
-              <option key={a.reg} value={a.reg}>{a.reg} · {a.type}</option>
-            ))}
+          Funktion
+          <select value={crew.role} onChange={(e) => setCrew({ ...crew, role: e.target.value as typeof crew.role })}>
+            <option value="PIC">PIC</option>
+            <option value="DUAL">Schulung mit FI</option>
+            <option value="FI">Ich als Fluglehrer</option>
           </select>
         </label>
-        <div className="grid2">
+        {crew.role === 'DUAL' && (
           <label>
-            Funktion
-            <select value={crew.role} onChange={(e) => setCrew({ ...crew, role: e.target.value as typeof crew.role })}>
-              <option value="PIC">PIC (allein / verantwortlich)</option>
-              <option value="DUAL">Schulung mit Fluglehrer</option>
-              <option value="FI">Ich als Fluglehrer</option>
-            </select>
+            Fluglehrer
+            <input value={crew.instructor} placeholder="Name" onChange={(e) => setCrew({ ...crew, instructor: e.target.value })} />
           </label>
-          {crew.role === 'DUAL' && (
-            <label>
-              Fluglehrer
-              <input value={crew.instructor} placeholder="Name FI" onChange={(e) => setCrew({ ...crew, instructor: e.target.value })} />
-            </label>
-          )}
-          {crew.role === 'FI' && (
-            <label>
-              Flugschüler
-              <input value={crew.student} placeholder="Name Schüler" onChange={(e) => setCrew({ ...crew, student: e.target.value })} />
-            </label>
-          )}
-        </div>
-        <button className="primary big" onClick={startGps}>▶ GPS-Aufzeichnung starten</button>
-        <p className="small muted">
-          Einfach vor dem Rollen starten und das Handy ablegen. Start, jede Landung, Touch-and-Go und Full-Stop werden
-          automatisch erkannt, Start-/Zielplatz aus der Flugplatzdatenbank ermittelt. Nach dem Abstellen wird der Flug
-          selbstständig ins Flugbuch eingetragen.
-        </p>
-      </div>
-
-      <div className="card">
-        <h2>Simulator (Testen ohne Flugzeug)</h2>
-        <p className="small muted" style={{ marginTop: 0 }}>
-          Spielt eine Platzrunde mit Touch-and-Go und anschließender Full-Stop-Landung ab – ideal, um Erkennung und Navi
-          am Schreibtisch auszuprobieren.
-        </p>
-        {simField && !pickSim ? (
-          <div className="row" style={{ marginBottom: 10 }}>
-            <div><b>{simField.icao}</b> {simField.name}</div>
-            <button style={{ flex: '0 0 auto' }} onClick={() => setPickSim(true)}>Ändern</button>
-          </div>
-        ) : (
-          <div style={{ marginBottom: 10 }}>
-            <AirfieldSearch onPick={(a) => { setSimField(a); setPickSim(false); }} placeholder="Platz für Simulation, z.B. EDFE" />
-          </div>
         )}
-        <label>
-          Zeitraffer
-          <select value={speedup} onChange={(e) => setSpeedup(Number(e.target.value))}>
-            <option value={1}>Echtzeit (ca. 17 min)</option>
-            <option value={5}>5×</option>
-            <option value={10}>10×</option>
-            <option value={30}>30×</option>
-          </select>
-        </label>
-        <button className="big" disabled={!simField} onClick={startSim}>▶ Simulation starten</button>
+        {crew.role === 'FI' && (
+          <label>
+            Flugschüler
+            <input value={crew.student} placeholder="Name" onChange={(e) => setCrew({ ...crew, student: e.target.value })} />
+          </label>
+        )}
       </div>
 
-      <div className="card">
-        <h2>Nur Navi</h2>
-        <button className="big" onClick={onOpenNav}>🗺️ Moving Map ohne Aufzeichnung</button>
+      <button className="primary big" style={{ marginTop: 10 }} onClick={startGps}>
+        <span className="rec-dot" />
+        Aufzeichnung starten
+      </button>
+      <p className="hint">Vor dem Rollen starten.</p>
+
+      <div style={{ marginTop: 18, borderTop: '1.5px solid var(--rule)' }}>
+        <details className="section">
+          <summary>So funktioniert die Erkennung</summary>
+          <div className="body">
+            <p style={{ marginTop: 0, lineHeight: 1.5 }}>
+              Handy mit eingeschaltetem Bildschirm ablegen. Start, jede Landung, Touch-and-Go und Full-Stop werden aus GPS-Geschwindigkeit
+              und Höhe erkannt; Start- und Zielplatz kommen aus der Flugplatzdatenbank. {Math.round(settings.detector.flightEndSec / 60)} Minuten
+              Stillstand nach der letzten Landung beenden den Flug – er wird dann selbstständig ins Flugbuch eingetragen.
+            </p>
+            <p className="small muted" style={{ marginBottom: 0 }}>Schwellwerte lassen sich unter Einstellungen an dein Luftfahrzeug anpassen.</p>
+          </div>
+        </details>
+
+        <details className="section" onToggle={(e) => setSimOpen((e.target as HTMLDetailsElement).open)}>
+          <summary>
+            <span>
+              <span className="sum-eyebrow">Simulator</span>
+              Platzrunde testen
+            </span>
+          </summary>
+          {simOpen && (
+            <div className="body">
+              <p className="small muted" style={{ marginTop: 0 }}>Spielt eine Platzrunde mit Touch-and-Go und Full-Stop ab – zum Ausprobieren am Schreibtisch.</p>
+              {simField && !pickSim ? (
+                <div className="row" style={{ marginBottom: 10 }}>
+                  <div><b>{simField.icao}</b> {simField.name}</div>
+                  <button style={{ flex: '0 0 auto' }} onClick={() => setPickSim(true)}>Ändern</button>
+                </div>
+              ) : (
+                <div style={{ marginBottom: 10 }}>
+                  <AirfieldSearch onPick={(a) => { setSimField(a); setPickSim(false); }} placeholder="Platz suchen, z.B. EDFE" />
+                </div>
+              )}
+              <label>
+                Zeitraffer
+                <select value={speedup} onChange={(e) => setSpeedup(Number(e.target.value))}>
+                  <option value={1}>Echtzeit (ca. 17 min)</option>
+                  <option value={5}>5×</option>
+                  <option value={10}>10×</option>
+                  <option value={30}>30×</option>
+                </select>
+              </label>
+              <button className="big" disabled={!simField} onClick={startSim}>Simulation starten</button>
+            </div>
+          )}
+        </details>
+
+        <details className="section">
+          <summary>
+            <span>
+              <span className="sum-eyebrow">Navi</span>
+              Moving Map ohne Aufzeichnung
+            </span>
+          </summary>
+          <div className="body">
+            <button className="big" onClick={onOpenNav}>Karte öffnen</button>
+          </div>
+        </details>
       </div>
     </>
   );
