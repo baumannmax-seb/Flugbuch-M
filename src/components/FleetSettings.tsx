@@ -65,7 +65,7 @@ export function AircraftSettings({ settings, onChange }: { settings: AppSettings
               {settings.defaultAircraft !== a.reg && (
                 <button className="link" style={{ flex: '0 0 auto' }} onClick={() => onChange({ ...settings, defaultAircraft: a.reg })}>Als Standard</button>
               )}
-              <button className="link" style={{ flex: '0 0 auto', color: 'var(--red)' }} onClick={() => remove(a)}>Entfernen</button>
+              <button className="link" style={{ flex: '0 0 auto', color: 'var(--muted)' }} onClick={() => remove(a)}>Entfernen</button>
             </div>
           </div>
         ))}
@@ -131,7 +131,7 @@ export function InstructorSettings({ settings, onChange }: { settings: AppSettin
           )}
           <button
             className="link"
-            style={{ flex: '0 0 auto', color: 'var(--red)' }}
+            style={{ flex: '0 0 auto', color: 'var(--muted)' }}
             onClick={() => onChange({ ...settings, instructors: settings.instructors.filter((x) => x.name !== i.name), defaultInstructor: settings.defaultInstructor === i.name ? '' : settings.defaultInstructor })}
           >
             Entfernen

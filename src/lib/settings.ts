@@ -28,6 +28,8 @@ export interface AppSettings {
   openAipUrl: string; // leer = Standard
   customUrl: string; // eigene XYZ-Kachel-URL
   customName: string;
+  /** Darstellung: 'auto' folgt dem System */
+  theme: 'auto' | 'light' | 'dark';
 }
 
 export const DEFAULT_APP_SETTINGS: AppSettings = {
@@ -43,6 +45,7 @@ export const DEFAULT_APP_SETTINGS: AppSettings = {
   openAipUrl: '',
   customUrl: '',
   customName: '',
+  theme: 'auto',
 };
 
 export async function loadSettings(): Promise<AppSettings> {

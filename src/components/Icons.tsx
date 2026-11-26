@@ -16,10 +16,13 @@ export const IconBook = () => (
   </svg>
 );
 
+/** Kleines Propellerflugzeug / UL in Draufsicht (gerader Flügel, Propeller, T-Leitwerk) */
 export const IconPlane = () => (
   <svg viewBox="0 0 32 32" aria-hidden>
-    <path d="M16 4.5c1 0 1.6 1 1.6 2.3V13l11 3.2v2.3l-11-1.6v5.6l3.2 2.3v1.7L16 25.6l-4.8 1.2v-1.7l3.2-2.3v-5.6l-11 1.6v-2.3l11-3.2V6.8c0-1.3.6-2.3 1.6-2.3z" {...P} />
-    <path d="M9 9.5h14" {...P} />
+    <path d="M12.5 3.6h7" {...P} />
+    <rect x="3" y="11" width="26" height="4.6" rx="2.1" {...P} fill="var(--paper)" />
+    <rect x="10.4" y="24.2" width="11.2" height="2.8" rx="1.3" {...P} fill="var(--paper)" />
+    <path d="M14.5 7.6c0-1.6.6-3 1.5-3s1.5 1.4 1.5 3l-.3 14.6-.7 5.6h-1l-.7-5.6z" {...P} fill="var(--paper)" />
   </svg>
 );
 

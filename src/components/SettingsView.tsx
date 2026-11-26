@@ -3,10 +3,24 @@ import { exportBackup } from '../lib/export';
 import { DEFAULT_SETTINGS } from '../lib/flightDetector';
 import type { AppSettings } from '../lib/settings';
 import MapSettings from './MapSettings';
+import SimulatorCard from './SimulatorCard';
+import type { Recorder } from '../lib/recorder';
 import OfmxSettings from './OfmxSettings';
 import { AircraftSettings, InstructorSettings } from './FleetSettings';
 
-export default function SettingsView({ settings, onChange, onDataChanged }: { settings: AppSettings; onChange: (s: AppSettings) => void; onDataChanged: () => void }) {
+export default function SettingsView({
+  settings,
+  onChange,
+  onDataChanged,
+  recorder,
+  onOpenNav,
+}: {
+  settings: AppSettings;
+  onChange: (s: AppSettings) => void;
+  onDataChanged: () => void;
+  recorder: Recorder;
+  onOpenNav: () => void;
+}) {
   const det = settings.detector;
   const setDet = (k: keyof typeof det, v: number) => onChange({ ...settings, detector: { ...det, [k]: v } });
 
@@ -40,6 +54,24 @@ export default function SettingsView({ settings, onChange, onDataChanged }: { se
   return (
     <div className="settings-grid">
       <div className="card">
+        <h2>Darstellung</h2>
+        <div className="chips">
+          {(
+            [
+              ['auto', 'Automatisch'],
+              ['light', 'Hell'],
+              ['dark', 'Dunkel (Nacht)'],
+            ] as const
+          ).map(([v, l]) => (
+            <button key={v} className={(settings.theme ?? 'auto') === v ? 'on' : ''} onClick={() => onChange({ ...settings, theme: v })}>
+              {l}
+            </button>
+          ))}
+        </div>
+        <p className="small muted" style={{ marginBottom: 0 }}>„Automatisch“ folgt der Einstellung des iPhones (Dunkelmodus bei Dämmerung).</p>
+      </div>
+
+      <div className="card">
         <h2>Pilot</h2>
         <label>
           Name (wird als PIC eingetragen)
@@ -70,14 +102,16 @@ export default function SettingsView({ settings, onChange, onDataChanged }: { se
         <button onClick={() => onChange({ ...settings, detector: { ...DEFAULT_SETTINGS } })}>Standardwerte</button>
       </div>
 
+      <SimulatorCard recorder={recorder} settings={settings} onStarted={onOpenNav} />
+
       <div className="card">
         <h2>Daten</h2>
         <p className="small muted" style={{ marginTop: 0 }}>Alle Daten liegen nur lokal auf diesem Gerät. Regelmäßig sichern!</p>
         <div className="row">
           <button onClick={backup}>Backup exportieren</button>
-          <label style={{ margin: 0 }}>
-            <span className="muted small">Backup importieren</span>
-            <input type="file" accept="application/json" onChange={(e) => e.target.files?.[0] && restore(e.target.files[0])} />
+          <label className="button-like">
+            <input type="file" accept="application/json" style={{ display: 'none' }} onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ''; if (f) restore(f); }} />
+            <span>Backup importieren</span>
           </label>
         </div>
       </div>

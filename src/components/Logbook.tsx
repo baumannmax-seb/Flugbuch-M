@@ -5,6 +5,7 @@ import { exportCsv } from '../lib/export';
 import type { AppSettings } from '../lib/settings';
 import EntryForm, { emptyEntry } from './EntryForm';
 import CsvImportSheet from './CsvImportSheet';
+import RecIcon from './RecIcon';
 import AircraftArt, { defaultAircraft } from './AircraftArt';
 
 const MONTHS = ['Januar', 'Februar', 'März', 'April', 'Mai', 'Juni', 'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember'];
@@ -53,11 +54,14 @@ export default function Logbook({
 
   return (
     <>
-      <div className="kpis">
-        <div className="kpi"><div className="v">{fmtDuration(totalMin * 60000)}</div><div className="l">Flugstunden</div></div>
-        <div className="kpi"><div className="v">{entries.length}</div><div className="l">Flüge</div></div>
-        <div className="kpi"><div className="v">{totalLdg}</div><div className="l">Landungen</div></div>
-      </div>
+      {/* Kennzahlen erst ab dem ersten Flug – der Leer-Zustand bleibt ruhig */}
+      {entries.length > 0 && (
+        <div className="kpis">
+          <div className="kpi"><div className="v">{fmtDuration(totalMin * 60000)}</div><div className="l">Flugstunden</div></div>
+          <div className="kpi"><div className="v">{entries.length}</div><div className="l">Flüge</div></div>
+          <div className="kpi"><div className="v">{totalLdg}</div><div className="l">Landungen</div></div>
+        </div>
+      )}
 
       {entries.length === 0 ? (
         <div className="hero">
@@ -68,7 +72,7 @@ export default function Logbook({
           <h2>Dein erster Flug</h2>
           <p>Starte eine GPS-Aufzeichnung – Start, Landungen und Touch-and-Gos werden automatisch erkannt und hier eingetragen.</p>
           <button className="primary big" onClick={onRecord}>
-            <span className="rec-dot plain" />
+            <RecIcon size={34} />
             Flug aufzeichnen
           </button>
           <div className="hero-links" style={{ marginTop: 14, display: 'flex', gap: 28, justifyContent: 'center' }}>

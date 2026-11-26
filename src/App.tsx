@@ -9,6 +9,7 @@ import FlyView from './components/FlyView';
 import Stats from './components/Stats';
 import SettingsView from './components/SettingsView';
 import NavMap from './components/NavMap';
+import RecIcon from './components/RecIcon';
 import { BrandMark, IconBook, IconPlane, IconSliders, IconStats } from './components/Icons';
 
 type Tab = 'log' | 'fly' | 'stats' | 'settings';
@@ -51,6 +52,15 @@ export default function App() {
     };
   }, [recorder]);
 
+  // Darstellung: hell / dunkel / automatisch (System)
+  useEffect(() => {
+    const t = settings.theme ?? 'auto';
+    if (t === 'auto') document.documentElement.removeAttribute('data-theme');
+    else document.documentElement.setAttribute('data-theme', t);
+    const dark = t === 'dark' || (t === 'auto' && window.matchMedia?.('(prefers-color-scheme: dark)').matches);
+    document.querySelector('meta[name="theme-color"]')?.setAttribute('content', dark ? '#0f2a22' : '#f6efe4');
+  }, [settings.theme]);
+
   const updateSettings = (s: AppSettings) => {
     setSettings(s);
     saveSettings(s);
@@ -60,14 +70,10 @@ export default function App() {
 
   return (
     <div className="app">
-      <div className="brand">
+      {/* Marke nur im Flugbuch (auf breiten Bildschirmen immer, dort ist sie Teil der Seitenleiste) */}
+      <div className={`brand ${tab !== 'log' ? 'brand-optional' : ''}`}>
         <BrandMark />
         Platzrunde
-        {rec.active && (
-          <button className="rec-pill" onClick={() => setNavOpen(true)}>
-            ● Aufzeichnung
-          </button>
-        )}
       </div>
       <div className="header">
         <h1>
@@ -76,9 +82,16 @@ export default function App() {
           {tab === 'stats' && 'Auswertung'}
           {tab === 'settings' && 'Einstellungen'}
         </h1>
-        {tab === 'log' && (
-          <button className="menu-btn" aria-label="Menü" onClick={() => setLogMenu(true)}>⋮</button>
-        )}
+        <div className="header-actions">
+          {rec.active && (
+            <button className="rec-pill" onClick={() => setNavOpen(true)}>
+              <RecIcon size={18} spinning /> Aufzeichnung
+            </button>
+          )}
+          {tab === 'log' && (
+            <button className="menu-btn" aria-label="Menü" onClick={() => setLogMenu(true)}>⋮</button>
+          )}
+        </div>
       </div>
       <div className="content">
         {tab === 'log' && (
@@ -86,7 +99,7 @@ export default function App() {
         )}
         {tab === 'fly' && <FlyView recorder={recorder} rec={rec} settings={settings} onOpenNav={() => setNavOpen(true)} onShowLog={() => setTab('log')} />}
         {tab === 'stats' && <Stats entries={entries} />}
-        {tab === 'settings' && <SettingsView settings={settings} onChange={updateSettings} onDataChanged={reloadEntries} />}
+        {tab === 'settings' && <SettingsView settings={settings} onChange={updateSettings} onDataChanged={reloadEntries} recorder={recorder} onOpenNav={() => setNavOpen(true)} />}
       </div>
       <nav className="tabbar">
         {(
