@@ -117,6 +117,20 @@ export default function NavMap({ recorder, rec, settings, onSettings, onClose }:
             L.polyline([e.a, e.b], { color: /GR|TURF/i.test(r.surface) ? '#66bb6a' : '#eceff1', weight: w, opacity: 0.9, interactive: false, dashArray: e.approx ? '6 4' : undefined }).addTo(g);
           }
         }
+        // Veröffentlichte Platzrunden und An-/Abflugrouten (openflightmaps) ab Zoom 10
+        if (z >= 10) {
+          for (const p of getDetailsSync(f.icao)?.procs ?? []) {
+            const circ = p.kind === 'circuit';
+            L.polyline(p.coords, { color: circ ? '#ffab00' : '#e040fb', weight: circ ? 3 : 2.5, dashArray: circ ? undefined : '8 6', opacity: 0.95, interactive: false }).addTo(g);
+            if (circ && z >= 11) {
+              const mid = p.coords[Math.floor(p.coords.length / 2)];
+              L.marker(mid, {
+                interactive: false,
+                icon: L.divIcon({ className: 'circuit-label', html: `${f.icao} Platzrunde${p.alt ? ' · ' + p.alt : ''}`, iconSize: [170, 20], iconAnchor: [85, 10] }),
+              }).addTo(g);
+            }
+          }
+        }
         // VFR-Meldepunkte (openflightmaps) ab Zoom 10
         if (z >= 10) {
           for (const p of getDetailsSync(f.icao)?.rps ?? []) {
@@ -348,6 +362,7 @@ export default function NavMap({ recorder, rec, settings, onSettings, onClose }:
       {selField && (
         <AirfieldSheet
           field={selField}
+          openAipKey={settings.openAipKey}
           pos={pos}
           onClose={() => setSelField(null)}
           onDirectTo={(f) => {

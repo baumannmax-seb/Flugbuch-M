@@ -15,6 +15,7 @@ import {
   type FieldUserData,
 } from '../lib/airfieldDetails';
 import { bearing, distance, NM_IN_M, pad3 } from '../lib/geo';
+import { loadOaipAirport } from '../lib/openaipApi';
 
 /** Detailansicht eines Flugplatzes (öffnet sich beim Tippen auf einen Platz in der Karte) */
 export default function AirfieldSheet({
@@ -23,7 +24,9 @@ export default function AirfieldSheet({
   onClose,
   onDirectTo,
   onChanged,
+  openAipKey = '',
 }: {
+  openAipKey?: string;
   field: Airfield;
   pos: { lat: number; lon: number } | null;
   onClose: () => void;
@@ -32,11 +35,20 @@ export default function AirfieldSheet({
 }) {
   const [loaded, setLoaded] = useState(false);
   const [data, setData] = useState<FieldUserData | null>(null);
+  const [, setOaipTick] = useState(0);
 
   useEffect(() => {
     loadDetails().then(() => setLoaded(true));
     getFieldData(field.icao).then(setData);
-  }, [field.icao]);
+    // Platzrundenrichtung von openAIP nachladen (wird zwischengespeichert)
+    loadOaipAirport(field.icao, openAipKey).then((r) => {
+      if (r) {
+        setOaipTick((x) => x + 1);
+        onChanged();
+      }
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [field.icao, openAipKey]);
 
   const det = loaded ? getDetailsSync(field.icao) : null;
 
@@ -102,6 +114,7 @@ export default function AirfieldSheet({
               {det.patterns && (det.patterns[r.le] || det.patterns[r.he]) && (
                 <div className="muted">
                   Platzrunde: {[r.le, r.he].filter((x) => det.patterns?.[x]).map((x) => `${x} ${patName(det.patterns![x])}`).join(' · ')}
+                  <span className="small"> ({[...new Set([r.le, r.he].map((x) => det.patternSource?.[x]).filter(Boolean))].join(', ')})</span>
                 </div>
               )}
             </div>
@@ -117,6 +130,21 @@ export default function AirfieldSheet({
                 <b style={{ flex: '0 0 auto', fontSize: 16 }}>{Number(f.mhz).toFixed(3)}</b>
               </div>
             ))}
+          </div>
+        )}
+
+        {det?.procs && det.procs.length > 0 && (
+          <div className="card">
+            <h2>Veröffentlichte Verfahren (openflightmaps)</h2>
+            {det.procs.map((p, i) => (
+              <div key={i} className="row small" style={{ padding: '3px 0' }}>
+                <div>
+                  <b style={{ fontSize: 16 }}>{p.kind === 'circuit' ? 'Platzrunde' : p.kind === 'arrival' ? 'Anflug' : p.kind === 'departure' ? 'Abflug' : p.codeType}</b> {p.name}
+                </div>
+                <span style={{ flex: '0 0 auto' }} className="muted">{p.alt}</span>
+              </div>
+            ))}
+            <p className="small muted" style={{ marginBottom: 0 }}>Wird auf der Karte automatisch angezeigt (Platzrunde orange, Routen violett gestrichelt).</p>
           </div>
         )}
 
@@ -159,8 +187,8 @@ export default function AirfieldSheet({
                   <label>
                     Richtung
                     <select value={cfg.dir} onChange={(e) => setCfg({ dir: e.target.value as 'L' | 'R' })}>
-                      <option value="L">Linksplatzrunde{cfg.dirSource === 'ofm' && cfg.dir === 'L' ? ' (OFM)' : ''}</option>
-                      <option value="R">Rechtsplatzrunde{cfg.dirSource === 'ofm' && cfg.dir === 'R' ? ' (OFM)' : ''}</option>
+                      <option value="L">Linksplatzrunde{cfg.dir === 'L' && (cfg.dirSource === 'OFM' || cfg.dirSource === 'openAIP') ? ` (${cfg.dirSource})` : ''}</option>
+                      <option value="R">Rechtsplatzrunde{cfg.dir === 'R' && (cfg.dirSource === 'OFM' || cfg.dirSource === 'openAIP') ? ` (${cfg.dirSource})` : ''}</option>
                     </select>
                   </label>
                   <label>

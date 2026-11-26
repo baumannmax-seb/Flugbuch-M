@@ -20,12 +20,16 @@ export default function OfmxSettings() {
       await saveOfmx(data);
       const aps = Object.values(data.airports);
       const rps = aps.reduce((s, a) => s + a.rps.length, 0);
+      const procs = aps.reduce((s, a) => s + a.procs.filter((p) => p.kind === 'circuit').length, 0);
       const pat = aps.reduce((s, a) => s + a.runways.reduce((t, r) => t + r.dirs.filter((x) => x.pattern === 'L' || x.pattern === 'R').length, 0), 0);
       setMsg({
         ok: true,
         text:
           `${aps.length} Flugplätze und ${rps} VFR-Meldepunkte übernommen. ` +
-          (pat ? `${pat} Platzrundenrichtungen übernommen.` : 'Platzrundenrichtungen sind in dieser Datei nicht enthalten – die Richtung stellst du pro Platz selbst ein.'),
+          (procs
+            ? `${procs} veröffentlichte Platzrunden übernommen.`
+            : 'Keine Platzrunden in dieser Datei – sie stehen in der Variante „ofmx_ed.xml“ (am einfachsten das ganze ZIP importieren).') +
+          (pat ? ` ${pat} Platzrundenrichtungen.` : ''),
       });
     } catch (e) {
       setMsg({ ok: false, text: `Import fehlgeschlagen: ${(e as Error).message}` });
@@ -39,8 +43,8 @@ export default function OfmxSettings() {
     <div className="card">
       <h2>Platzdaten (openflightmaps)</h2>
       <p className="small muted" style={{ marginTop: 0 }}>
-        OFMX-Datei deiner Region von openflightmaps.org herunterladen (Downloads → Region, z. B. „ed“ → OFMX) und hier importieren – ZIP
-        geht direkt. Damit kennt die App die exakte Pistenlage, die Platzrundenrichtung je Piste, die VFR-Meldepunkte, Frequenzen und
+        OFMX-Daten deiner Region von openflightmaps.org herunterladen (Downloads → Region, z. B. „ed“) und das ZIP hier importieren. Wichtig:
+        Die veröffentlichten Platzrunden und An-/Abflugrouten stehen in der Datei „ofmx_ed.xml“ – die „.ofmx“-Variante enthält sie nicht. Damit kennt die App die exakte Pistenlage, die Platzrundenrichtung je Piste, die VFR-Meldepunkte, Frequenzen und
         Platzhinweise. Die Daten bleiben auf diesem Gerät; bitte die Nutzungsbedingungen von openflightmaps beachten.
       </p>
       {meta && (
@@ -81,6 +85,8 @@ function Diag({ diag }: { diag: OfmxDiag }) {
   const text = [
     `Pisten: ${diag.runways}, Pistenrichtungen: ${diag.dirs} (zugeordnet ${diag.dirsLinked}, mit Platzrundenrichtung ${diag.dirsWithPattern})`,
     `codeVfrPattern-Werte: ${JSON.stringify(diag.patternValues)}`,
+    `Dateien: ${(diag.files ?? []).join(', ')}`,
+    `Verfahren (Prc): ${JSON.stringify(diag.procTypes ?? {})}, zugeordnet ${diag.procsAssigned ?? 0}`,
     `Elemente: ${tags.map(([k, v]) => `${k}=${v}`).join(', ')}`,
     `Stichworte: ${JSON.stringify(diag.keywords ?? {})}`,
     `Luftraum-Typen: ${JSON.stringify(diag.aseTypes ?? {})}`,

@@ -41,6 +41,14 @@ export interface OfmxReportingPoint {
   lat: number;
   lon: number;
 }
+/** Veröffentlichtes VFR-Verfahren aus openflightmaps (<Prc>) */
+export interface OfmxProcedure {
+  kind: 'circuit' | 'arrival' | 'departure' | 'other';
+  codeType: string;
+  name: string;
+  alt: string; // Höhenangabe als Text, falls vorhanden
+  coords: [number, number][]; // [lat, lon]
+}
 export interface OfmxAirport {
   id: string;
   icao: string;
@@ -55,6 +63,7 @@ export interface OfmxAirport {
   runways: OfmxRunway[];
   freqs: { service: string; callsign: string; mhz: string }[];
   rps: OfmxReportingPoint[];
+  procs: OfmxProcedure[];
 }
 export interface OfmxDiag {
   tags: Record<string, number>; // Anzahl je Feature-Element (z.B. Ahp, Rwy, Rdn, Ase …)
@@ -64,6 +73,9 @@ export interface OfmxDiag {
   dirsWithPattern: number;
   patternValues: Record<string, number>;
   keywords?: Record<string, number>;
+  procTypes?: Record<string, number>;
+  procsAssigned?: number;
+  files?: string[];
   aseTypes?: Record<string, number>;
   samples: { label: string; text: string }[];
 }
@@ -105,8 +117,8 @@ const num = (s: string) => (s === '' ? null : Number(s));
 const toFt = (v: number | null, uom: string) => (v == null ? null : uom === 'M' ? Math.round(v * 3.28084) : v);
 const toM = (v: number | null, uom: string) => (v == null ? null : uom === 'FT' ? Math.round(v * 0.3048) : v);
 
-const FEATURE_RE = /<(Ahp|Aha|Rwy|Rdn|Dpn|Uni|Fqy|Ase)(?=[\s>])[^>]*>[\s\S]*?<\/\1>/g;
-const FEATURE_START_RE = /<(Ahp|Aha|Rwy|Rdn|Dpn|Uni|Fqy|Ase)(?=[\s>])/g;
+const FEATURE_RE = /<(Ahp|Aha|Rwy|Rdn|Dpn|Uni|Fqy|Ase|Prc)(?=[\s>])[^>]*>[\s\S]*?<\/\1>/g;
+const FEATURE_START_RE = /<(Ahp|Aha|Rwy|Rdn|Dpn|Uni|Fqy|Ase|Prc)(?=[\s>])/g;
 
 /** Zustand während des Parsens */
 class Collector {
@@ -117,7 +129,10 @@ class Collector {
   units: Record<string, string> = {}; // UniUid-Schlüssel → Flugplatz-ID
   freqs: { uni: string; f: OfmxAirport['freqs'][number] }[] = [];
   rps: { ahp: string; p: OfmxReportingPoint }[] = [];
+  procs: { ahp: string; p: OfmxProcedure }[] = [];
+  procTypes: Record<string, number> = {};
   header = '';
+  files: string[] = [];
   tags: Record<string, number> = {};
   patternValues: Record<string, number> = {};
   keywords: Record<string, number> = {};
@@ -160,6 +175,7 @@ class Collector {
           runways: [],
           freqs: [],
           rps: [],
+          procs: [],
         };
         break;
       }
@@ -227,6 +243,27 @@ class Collector {
         this.rps.push({ ahp, p: { id, name: tag(after(b, 'DpnUid'), 'txtName') || id, mandatory: type === 'VFR-MRP', lat, lon } });
         break;
       }
+      case 'Prc': {
+        // Platzrunden / An- und Abflugrouten (openflightmaps-Erweiterung)
+        const codeType = tag(b, 'codeType');
+        this.procTypes[codeType || '(leer)'] = (this.procTypes[codeType || '(leer)'] ?? 0) + 1;
+        this.sample(`Prc ${codeType}`, b);
+        const pos = tag(inner(b, '_beztrajectory'), 'gmlPosList') || tag(inner(b, '_sceletonPath'), 'gmlPosList') || tag(b, 'gmlPosList');
+        const coords = pos
+          .split(/\s+/)
+          .map((pair) => pair.split(',').map(Number))
+          .filter((x) => x.length >= 2 && isFinite(x[0]) && isFinite(x[1]))
+          .map(([lon, lat]) => [lat, lon] as [number, number])
+          .filter((c, i, a) => i === 0 || c[0] !== a[i - 1][0] || c[1] !== a[i - 1][1]);
+        if (coords.length < 2) return;
+        // Flugplatz: AhpUid im Element, sonst später über die Lage zugeordnet
+        const ahp = tag(inner(b, 'AhpUid'), 'codeId') || tag(inner(b, 'AhpUidAssoc'), 'codeId');
+        // Höhe: erstes Feld mit "Alt" im Namen samt Einheit (Format nicht offiziell dokumentiert)
+        const am = b.match(/<(val\w*Alt\w*)>([\d.]+)<\/\1>[\s\S]{0,200}?<(uom\w*)>(\w+)<\/\3>/);
+        const kind = /CIRCUIT/i.test(codeType) ? 'circuit' : /ARR/i.test(codeType) ? 'arrival' : /DEP/i.test(codeType) ? 'departure' : 'other';
+        this.procs.push({ ahp, p: { kind, codeType, name: tag(b, 'txtName') || tag(inner(b, 'PrcUid'), 'txtName') || tag(inner(b, 'PrcUid'), 'codeId'), alt: am ? `${am[2]} ${am[4]}` : '', coords } });
+        break;
+      }
       case 'Ase': {
         // nur für die Diagnose: welche Luftraum-Typen gibt es (Platzrunden als Lufträume?)
         const uid = inner(b, 'AseUid');
@@ -258,15 +295,47 @@ class Collector {
       this.airports[ahp]?.runways.push(rwy);
     }
     let dirsLinked = 0;
+    const seenDir = new Set<string>();
     for (const { ahp, rwy, dir } of this.dirs) {
+      const k = `${ahp}|${rwy}|${dir.desig}`;
+      if (seenDir.has(k)) continue; // gleiche Daten aus mehreren Dateien im ZIP
+      seenDir.add(k);
       const r = this.runways[`${ahp}|${rwy}`];
       if (r) {
         r.dirs.push(dir);
         dirsLinked++;
       }
     }
-    for (const { ahp, a } of this.addresses) this.airports[ahp]?.addresses.push(a);
-    for (const { ahp, p } of this.rps) this.airports[ahp]?.rps.push(p);
+    for (const { ahp, a } of this.addresses) {
+      const ap = this.airports[ahp];
+      if (ap && !ap.addresses.some((x) => x.type === a.type && x.value === a.value)) ap.addresses.push(a);
+    }
+    for (const { ahp, p } of this.rps) {
+      const ap = this.airports[ahp];
+      if (ap && !ap.rps.some((x) => x.id === p.id && x.lat === p.lat)) ap.rps.push(p);
+    }
+    const aps = Object.values(this.airports);
+    let procsAssigned = 0;
+    for (const { ahp, p } of this.procs) {
+      let ap = ahp ? this.airports[ahp] : undefined;
+      if (!ap) {
+        // nächster Flugplatz zum Schwerpunkt (max. ~6 km)
+        const cLat = p.coords.reduce((s, c) => s + c[0], 0) / p.coords.length;
+        const cLon = p.coords.reduce((s, c) => s + c[1], 0) / p.coords.length;
+        let best = 0.0035;
+        for (const a of aps) {
+          const d = (a.lat - cLat) ** 2 + ((a.lon - cLon) * Math.cos((cLat * Math.PI) / 180)) ** 2;
+          if (d < best) {
+            best = d;
+            ap = a;
+          }
+        }
+      }
+      if (ap && !ap.procs.some((x) => x.codeType === p.codeType && x.coords[0][0] === p.coords[0][0] && x.coords[0][1] === p.coords[0][1])) {
+        ap.procs.push(p);
+        procsAssigned++;
+      }
+    }
     for (const { uni, f } of this.freqs) {
       const ap = this.airports[this.units[uni]];
       if (ap && !ap.freqs.some((x) => x.mhz === f.mhz && x.callsign === f.callsign)) ap.freqs.push(f);
@@ -287,6 +356,9 @@ class Collector {
           dirsLinked,
           dirsWithPattern: this.dirs.filter((d) => d.dir.pattern).length,
           patternValues: this.patternValues,
+          procTypes: this.procTypes,
+          procsAssigned,
+          files: this.files,
           keywords: this.keywords,
           aseTypes: this.aseTypes,
           samples: [{ label: 'Kopfzeile', text: this.header }, ...this.samples],
@@ -302,6 +374,11 @@ export function createOfmxParser() {
   const c = new Collector();
   let buf = '';
   return {
+    /** neue Datei beginnt (mehrere Dateien aus einem ZIP in denselben Sammler) */
+    file(name: string) {
+      buf = '';
+      c.files.push(name);
+    },
     push(chunk: string) {
       c.observe(chunk);
       buf += chunk;
@@ -335,26 +412,32 @@ export function parseOfmxText(text: string, fileName = 'ofmx'): OfmxData {
 
 /** Datei (.ofmx / .xml oder .zip mit OFMX darin) einlesen */
 export async function parseOfmxFile(file: File, onProgress: (frac: number) => void): Promise<OfmxData> {
-  let bytes = new Uint8Array(await file.arrayBuffer());
-  let name = file.name;
+  const bytes = new Uint8Array(await file.arrayBuffer());
+  let parts: [string, Uint8Array][] = [[file.name, bytes]];
   if (bytes[0] === 0x50 && bytes[1] === 0x4b) {
-    // ZIP: größte .ofmx/.xml-Datei nehmen
+    // ZIP: alle OFMX-/XML-Dateien lesen (Platzrunden stehen z.B. nur in ofmx_xx.xml, nicht in .ofmx);
+    // die Shape-Extension (nur Darstellungsdaten) wird übersprungen
     const files = await new Promise<Record<string, Uint8Array>>((res, rej) =>
-      unzip(bytes, { filter: (f) => /\.(ofmx|xml)$/i.test(f.name) && !/__MACOSX/.test(f.name) }, (err, out) => (err ? rej(err) : res(out)))
+      unzip(bytes, { filter: (f) => /\.(ofmx|xml)$/i.test(f.name) && !/__MACOSX|ShapeExtension/i.test(f.name) }, (err, out) => (err ? rej(err) : res(out)))
     );
-    const best = Object.entries(files).sort((a, b) => b[1].length - a[1].length)[0];
-    if (!best) throw new Error('Im ZIP wurde keine .ofmx- oder .xml-Datei gefunden.');
-    [name, bytes] = best;
+    parts = Object.entries(files);
+    if (!parts.length) throw new Error('Im ZIP wurde keine .ofmx- oder .xml-Datei gefunden.');
   }
-  const dec = new TextDecoder('utf-8');
+  const total = parts.reduce((s, [, b]) => s + b.length, 0);
+  let done = 0;
   const p = createOfmxParser();
   const N = 4 << 20;
-  for (let i = 0; i < bytes.length; i += N) {
-    p.push(dec.decode(bytes.subarray(i, i + N), { stream: i + N < bytes.length }));
-    onProgress(Math.min(1, (i + N) / bytes.length));
-    await new Promise((r) => setTimeout(r, 0)); // Oberfläche nicht einfrieren
+  for (const [name, part] of parts) {
+    p.file(name.split('/').pop() ?? name);
+    const dec = new TextDecoder('utf-8');
+    for (let i = 0; i < part.length; i += N) {
+      p.push(dec.decode(part.subarray(i, i + N), { stream: i + N < part.length }));
+      done += Math.min(N, part.length - i);
+      onProgress(Math.min(1, done / total));
+      await new Promise((r) => setTimeout(r, 0)); // Oberfläche nicht einfrieren
+    }
   }
-  const data = p.finish(name.split('/').pop() ?? name);
+  const data = p.finish(parts.map(([n]) => n.split('/').pop()).join(', '));
   if (!Object.keys(data.airports).length) throw new Error('Keine Flugplätze gefunden – ist das eine OFMX-Datei von openflightmaps?');
   return data;
 }

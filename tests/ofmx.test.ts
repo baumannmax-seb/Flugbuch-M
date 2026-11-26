@@ -48,3 +48,31 @@ describe('OFMX-Import', () => {
     expect(lfst.freqs[0].callsign).toMatch(/STRASBOURG/);
   });
 });
+
+describe('OFMX-Verfahren (<Prc>, openflightmaps-Erweiterung)', () => {
+  const ahp = `<Ahp><AhpUid><codeId>EDXT</codeId></AhpUid><OrgUid><txtName>X</txtName></OrgUid><txtName>TESTPLATZ</txtName><codeType>AD</codeType><geoLat>50.7300N</geoLat><geoLong>011.2400E</geoLong></Ahp>`;
+  const prc = (type: string, withAhp: boolean) => `
+  <Prc>
+    <PrcUid><txtName>TEST ${type}</txtName></PrcUid>
+    ${withAhp ? '<AhpUid><codeId>EDXT</codeId></AhpUid>' : ''}
+    <txtName>${type === 'TRAFFIC_CIRCUIT' ? 'UL' : 'S1'}</txtName>
+    <codeType>${type}</codeType>
+    <valTrafficCircuitAlt>2100</valTrafficCircuitAlt><uomTrafficCircuitAlt>FT</uomTrafficCircuitAlt>
+    <_beztrajectory>
+      <gmlPosList>011.24115600,50.73425700 011.24126610,50.73429046 011.24126610,50.73429046 011.25452275,50.73831747 011.25850186,50.73306701 011.23034915,50.72451677</gmlPosList>
+    </_beztrajectory>
+  </Prc>`;
+
+  it('liest Platzrunde mit Geometrie, Höhe und Flugplatz', () => {
+    const d = parseOfmxText(ahp + prc('TRAFFIC_CIRCUIT', true) + prc('VFR_ARR', false));
+    const ap = d.airports['EDXT'];
+    expect(ap.procs).toHaveLength(2);
+    const c = ap.procs.find((p) => p.kind === 'circuit')!;
+    expect(c.coords[0]).toEqual([50.734257, 11.241156]);
+    expect(c.coords).toHaveLength(5); // doppelter Punkt entfernt
+    expect(c.alt).toBe('2100 FT');
+    // Anflugroute ohne AhpUid wird über die Lage zugeordnet
+    expect(ap.procs.find((p) => p.kind === 'arrival')).toBeTruthy();
+    expect(d.meta.diag?.procTypes).toEqual({ TRAFFIC_CIRCUIT: 1, VFR_ARR: 1 });
+  });
+});

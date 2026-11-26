@@ -10,7 +10,8 @@ import { db } from './db';
 import { destination, distance, bearing } from './geo';
 import type { Airfield } from './airfields';
 import { ofmxAirport, ofmxMeta } from './ofmxStore';
-import type { OfmxReportingPoint } from './ofmx';
+import type { OfmxProcedure, OfmxReportingPoint } from './ofmx';
+import { oaipCached } from './openaipApi';
 
 export interface Runway {
   le: string; // z.B. "08"
@@ -35,6 +36,10 @@ export interface AirfieldDetails {
   freqs: { type: string; desc: string; mhz: string }[];
   /** Platzrundenrichtung je Landerichtung laut openflightmaps (L/R/E) */
   patterns?: Record<string, 'L' | 'R' | 'E'>;
+  /** Herkunft der Richtung je Landerichtung */
+  patternSource?: Record<string, 'OFM' | 'openAIP'>;
+  /** veröffentlichte Platzrunden / An- und Abflugrouten (openflightmaps) */
+  procs?: OfmxProcedure[];
   /** VFR-Meldepunkte (openflightmaps) */
   rps?: OfmxReportingPoint[];
   rmk?: string;
@@ -56,8 +61,24 @@ export function loadDetails(): Promise<Raw> {
   return loading;
 }
 
-/** Details aus openflightmaps (falls importiert), sonst OurAirports */
+/** Details: openflightmaps (falls importiert) bzw. OurAirports, ergänzt um openAIP-Platzrundenrichtungen */
 export function getDetailsSync(icao: string): AirfieldDetails | null {
+  const det = baseDetails(icao);
+  if (!det) return null;
+  const patternSource: Record<string, 'OFM' | 'openAIP'> = {};
+  const patterns = { ...(det.patterns ?? {}) };
+  for (const k of Object.keys(patterns)) patternSource[k] = 'OFM';
+  const oaip = oaipCached(icao);
+  for (const [k, v] of Object.entries(oaip?.dirs ?? {})) {
+    if (!patterns[k]) {
+      patterns[k] = v;
+      patternSource[k] = 'openAIP';
+    }
+  }
+  return { ...det, patterns, patternSource };
+}
+
+function baseDetails(icao: string): AirfieldDetails | null {
   const o = ofmxAirport(icao);
   const d = raw?.[icao];
   if (o) {
@@ -89,6 +110,7 @@ export function getDetailsSync(icao: string): AirfieldDetails | null {
       freqs: o.freqs.length ? o.freqs.map((f) => ({ type: f.service, desc: f.callsign, mhz: f.mhz })) : getDetailsSyncOA(icao)?.freqs ?? [],
       patterns,
       rps: o.rps,
+      procs: o.procs ?? [],
       rmk: o.rmk,
       addresses: o.addresses,
       source: 'ofm',
@@ -164,14 +186,15 @@ export interface FieldUserData {
 export const DEFAULT_CIRCUIT: CircuitCfg = { dir: 'L', offsetM: 1200, altFt: '' };
 
 /** Wirksame Platzrunden-Einstellung: Standard ← openflightmaps-Richtung ← eigene Einstellung */
-export function effectiveCircuit(icao: string, rwyDir: string, user?: Partial<CircuitCfg>): CircuitCfg & { dirSource: 'ofm' | 'user' | 'default' } {
-  const p = getDetailsSync(icao)?.patterns?.[rwyDir];
+export function effectiveCircuit(icao: string, rwyDir: string, user?: Partial<CircuitCfg>): CircuitCfg & { dirSource: 'OFM' | 'openAIP' | 'user' | 'default' } {
+  const det = getDetailsSync(icao);
+  const p = det?.patterns?.[rwyDir];
   const ofmDir = p === 'L' || p === 'R' ? p : undefined;
   return {
     ...DEFAULT_CIRCUIT,
     ...(ofmDir ? { dir: ofmDir } : {}),
     ...user,
-    dirSource: user?.dir ? 'user' : ofmDir ? 'ofm' : 'default',
+    dirSource: user?.dir ? 'user' : ofmDir ? det?.patternSource?.[rwyDir] ?? 'OFM' : 'default',
   };
 }
 
