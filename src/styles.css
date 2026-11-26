@@ -411,3 +411,41 @@ label.check input { width: 20px; height: 20px; margin: 0; flex: 0 0 auto; accent
   :root:not([data-theme="light"]) .err { color: #ffcfc4; }
 }
 button.big { display: flex; align-items: center; justify-content: center; gap: 12px; }
+
+/* ---------- Hangar: Flugzeuge als wischbare Karten ---------- */
+.hangar { margin: 4px -20px 0; }
+.hangar-track {
+  display: flex; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none;
+  -webkit-overflow-scrolling: touch; overscroll-behavior-x: contain;
+}
+.hangar-track::-webkit-scrollbar { display: none; }
+.hangar-card { flex: 0 0 100%; scroll-snap-align: center; padding: 6px 20px 4px; box-sizing: border-box; }
+.hangar-card .ac-art { max-width: 520px; }
+.hangar-meta { display: flex; align-items: baseline; gap: 12px; justify-content: center; margin-top: 6px; }
+.hangar-meta .reg { font-family: var(--serif); font-size: 28px; font-weight: 700; }
+.hangar-meta .type { font-size: 17px; color: var(--muted); }
+.hangar-dots { display: flex; justify-content: center; gap: 4px; margin-top: 4px; }
+.hangar-dots button { width: 28px; height: 28px; padding: 0; border: 0; display: grid; place-items: center; background: none; }
+.hangar-dots button::after { content: ''; width: 7px; height: 7px; border-radius: 50%; background: var(--rule-soft); }
+.hangar-dots button.on::after { background: var(--ink); width: 18px; border-radius: 4px; }
+.hangar-empty { width: 100%; border: 1.5px dashed var(--rule-soft); border-radius: 16px; padding: 14px; display: flex; flex-direction: column; align-items: center; gap: 8px; opacity: 0.85; }
+.hangar-empty .ac-art { opacity: 0.35; max-width: 320px; }
+
+/* Flug gespeichert mit Flugzeug */
+.saved-card { text-align: center; padding: 10px 14px 14px; margin-bottom: 14px; border: 1.5px solid var(--ok); border-radius: 16px; }
+.saved-card .ac-art { margin-bottom: 4px; }
+
+/* Auswertung: Hangar-Karten */
+.hangar-stats { display: grid; gap: 14px; }
+.hangar-stat { border: 1.5px solid var(--rule-soft); border-radius: 16px; padding: 12px 14px; text-align: center; }
+.hangar-stat .ac-art.small { max-width: 300px; }
+.hangar-nums { display: grid; grid-template-columns: repeat(3, 1fr); margin: 10px 0 6px; }
+.hangar-nums div { display: flex; flex-direction: column; border-left: 1.5px solid var(--rule-soft); }
+.hangar-nums div:first-child { border-left: 0; }
+.hangar-nums b { font-family: var(--serif); font-size: 24px; }
+.hangar-nums span { font-size: 12px; color: var(--muted); }
+.stats-hangar { grid-column: 1 / -1; }
+@media (min-width: 700px) { .hangar-stats { grid-template-columns: 1fr 1fr; } .hangar { margin: 4px 0 0; } }
+
+/* Flug-Detail ohne GPS-Spur: Flugzeug als Kopfbild */
+.entry-art { padding: 6px 0 10px; border-bottom: 1.5px solid var(--rule-soft); margin-bottom: 12px; }

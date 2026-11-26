@@ -6,6 +6,7 @@ import { GpsStatusText, useGpsStatus } from '../lib/useGpsStatus';
 import InstructorPicker from './InstructorPicker';
 import AircraftArt from './AircraftArt';
 import RecIcon from './RecIcon';
+import Hangar from './Hangar';
 
 const PHASE_TXT = { GROUND: 'Am Boden', AIRBORNE: 'In der Luft', ROLLOUT: 'Ausrollen' } as const;
 
@@ -13,8 +14,8 @@ const PHASE_TXT = { GROUND: 'Am Boden', AIRBORNE: 'In der Luft', ROLLOUT: 'Ausro
  * Fliegen: Luftfahrzeug und Besatzung oben, GPS-Status und die Hauptaktion
  * unten direkt über der Tab-Leiste (mit dem Daumen erreichbar, auch mit Handschuh).
  */
-export default function FlyView({ recorder, rec, settings, onOpenNav, onShowLog }: { recorder: Recorder; rec: RecorderState; settings: AppSettings; onOpenNav: () => void; onShowLog: () => void }) {
-  const [reg, setReg] = useState(recorder.aircraftReg || settings.defaultAircraft);
+export default function FlyView({ recorder, rec, settings, onOpenNav, onShowLog, onAddAircraft }: { recorder: Recorder; rec: RecorderState; settings: AppSettings; onOpenNav: () => void; onShowLog: () => void; onAddAircraft: () => void }) {
+  const [reg, setReg] = useState(recorder.aircraftReg || settings.defaultAircraft || settings.aircraft[0]?.reg || '');
   const [crew, setCrew] = useState({ ...recorder.crew, instructor: recorder.crew.instructor || settings.defaultInstructor });
   const gps = useGpsStatus(!rec.active);
   const gpsInfo = GpsStatusText(gps);
@@ -52,11 +53,12 @@ export default function FlyView({ recorder, rec, settings, onOpenNav, onShowLog 
     );
   }
 
-  const ac = settings.aircraft.find((a) => a.reg === reg);
+  const savedAc = settings.aircraft.find((a) => a.reg === recorder.aircraftReg);
   return (
     <div className="fly-page">
       {rec.savedEntryId && (
-        <div className="ok-box" style={{ marginBottom: 14 }}>
+        <div className="saved-card">
+          {savedAc && <AircraftArt ac={savedAc} small />}
           <b className="serif" style={{ fontSize: 19 }}>✓ Flug gespeichert</b>
           <div style={{ margin: '4px 0 8px' }}>
             {rec.snap?.landings} Landung(en), davon {rec.snap?.touchAndGos} Touch-and-Go · Flugzeit {fmtDuration(rec.snap?.airborneMs ?? 0)}
@@ -66,19 +68,8 @@ export default function FlyView({ recorder, rec, settings, onOpenNav, onShowLog 
       )}
       {rec.snap && !rec.savedEntryId && rec.snap.takeoffs === 0 && <div className="err">Letzte Aufzeichnung enthielt keinen Start – kein Eintrag angelegt.</div>}
 
-      <div className="fly-art"><AircraftArt ac={ac} /></div>
       <p className="eyebrow" style={{ marginTop: 8 }}>Luftfahrzeug</p>
-      <div className="ac-select">
-        <span className="reg">{reg || '—'}</span>
-        <span className="type">{ac?.type || (settings.aircraft.length ? 'auswählen' : 'in Einstellungen anlegen')}</span>
-        <span className="chev" />
-        <select value={reg} onChange={(e) => setReg(e.target.value)} aria-label="Luftfahrzeug">
-          <option value="">– ohne –</option>
-          {settings.aircraft.map((a) => (
-            <option key={a.reg} value={a.reg}>{a.reg} · {a.type}</option>
-          ))}
-        </select>
-      </div>
+      <Hangar aircraft={settings.aircraft} value={reg} onChange={setReg} onAdd={onAddAircraft} />
 
       <div className="grid2" style={{ marginTop: 14 }}>
         <label>

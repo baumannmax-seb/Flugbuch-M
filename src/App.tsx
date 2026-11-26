@@ -97,8 +97,8 @@ export default function App() {
         {tab === 'log' && (
           <Logbook entries={entries} settings={settings} onChange={reloadEntries} menuOpen={logMenu} onMenuClose={() => setLogMenu(false)} onRecord={() => setTab('fly')} />
         )}
-        {tab === 'fly' && <FlyView recorder={recorder} rec={rec} settings={settings} onOpenNav={() => setNavOpen(true)} onShowLog={() => setTab('log')} />}
-        {tab === 'stats' && <Stats entries={entries} />}
+        {tab === 'fly' && <FlyView recorder={recorder} rec={rec} settings={settings} onOpenNav={() => setNavOpen(true)} onShowLog={() => setTab('log')} onAddAircraft={() => setTab('settings')} />}
+        {tab === 'stats' && <Stats entries={entries} settings={settings} />}
         {tab === 'settings' && <SettingsView settings={settings} onChange={updateSettings} onDataChanged={reloadEntries} recorder={recorder} onOpenNav={() => setNavOpen(true)} />}
       </div>
       <nav className="tabbar">

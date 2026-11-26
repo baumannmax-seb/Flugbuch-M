@@ -4,6 +4,7 @@ import { fmtDuration } from '../lib/geo';
 import { exportGpx } from '../lib/export';
 import type { AppSettings } from '../lib/settings';
 import TrackMap from './TrackMap';
+import AircraftArt from './AircraftArt';
 import InstructorPicker from './InstructorPicker';
 
 const toDateInput = (t: number) => {
@@ -100,7 +101,15 @@ export default function EntryForm({ initial, settings, isNew = false, onClose }:
           <h3>{isNew ? 'Neuer Flug' : 'Flug bearbeiten'}</h3>
           <button className="ghost close-x" onClick={() => onClose(false)}>✕</button>
         </div>
-        {track && <TrackMap track={track} settings={settings} />}
+        {track ? (
+          <TrackMap track={track} settings={settings} />
+        ) : (
+          e.aircraftReg && (
+            <div className="entry-art">
+              <AircraftArt ac={settings.aircraft.find((a) => a.reg.toUpperCase() === e.aircraftReg.toUpperCase()) ?? { reg: e.aircraftReg.toUpperCase(), type: e.aircraftType }} />
+            </div>
+          )
+        )}
         <div className="grid2">
           <label>
             Datum
