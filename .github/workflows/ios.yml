@@ -1,5 +1,6 @@
-# Baut die iOS-App auf einem macOS-Runner von GitHub (ohne Signatur) – prüft, dass das Xcode-Projekt kompiliert.
-# Manuell starten: Actions → "iOS Build" → Run workflow.
+# Baut die iOS-App auf einem macOS-Runner von GitHub – ohne Signatur.
+# Ergebnis: "Platzrunde-unsigned.ipa" als Download (Artifacts) zum Installieren per Sideloadly/AltStore
+# mit der eigenen (kostenlosen) Apple-ID. Manuell starten: Actions → "iOS Build" → Run workflow.
 # Für TestFlight wird zusätzlich ein Apple-Developer-Konto + Signatur-Secrets benötigt (siehe README, Abschnitt iPhone-App).
 name: iOS Build
 on:
@@ -17,8 +18,19 @@ jobs:
       - run: npm test
       - run: npm run build
       - run: npx cap sync ios
-      - name: Xcode-Build (Simulator, unsigniert)
+      - name: Xcode-Build für iPhone (Release, unsigniert)
         run: |
-          xcodebuild -project ios/App/App.xcodeproj -scheme App -configuration Debug \
-            -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' \
-            CODE_SIGNING_ALLOWED=NO build | tail -40
+          xcodebuild -project ios/App/App.xcodeproj -scheme App -configuration Release \
+            -sdk iphoneos -destination 'generic/platform=iOS' -derivedDataPath build \
+            CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" build | tail -40
+      - name: IPA packen
+        run: |
+          mkdir -p Payload
+          cp -R build/Build/Products/Release-iphoneos/App.app Payload/
+          zip -qr Platzrunde-unsigned.ipa Payload
+          ls -la Platzrunde-unsigned.ipa
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Platzrunde-unsigned-ipa
+          path: Platzrunde-unsigned.ipa
+          retention-days: 30
