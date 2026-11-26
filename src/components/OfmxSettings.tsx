@@ -21,7 +21,12 @@ export default function OfmxSettings() {
       const aps = Object.values(data.airports);
       const rps = aps.reduce((s, a) => s + a.rps.length, 0);
       const pat = aps.reduce((s, a) => s + a.runways.reduce((t, r) => t + r.dirs.filter((x) => x.pattern === 'L' || x.pattern === 'R').length, 0), 0);
-      setMsg({ ok: true, text: `${aps.length} Flugplätze, ${rps} VFR-Meldepunkte und ${pat} Platzrundenrichtungen übernommen.` });
+      setMsg({
+        ok: true,
+        text:
+          `${aps.length} Flugplätze und ${rps} VFR-Meldepunkte übernommen. ` +
+          (pat ? `${pat} Platzrundenrichtungen übernommen.` : 'Platzrundenrichtungen sind in dieser Datei nicht enthalten – die Richtung stellst du pro Platz selbst ein.'),
+      });
     } catch (e) {
       setMsg({ ok: false, text: `Import fehlgeschlagen: ${(e as Error).message}` });
     } finally {
@@ -77,6 +82,8 @@ function Diag({ diag }: { diag: OfmxDiag }) {
     `Pisten: ${diag.runways}, Pistenrichtungen: ${diag.dirs} (zugeordnet ${diag.dirsLinked}, mit Platzrundenrichtung ${diag.dirsWithPattern})`,
     `codeVfrPattern-Werte: ${JSON.stringify(diag.patternValues)}`,
     `Elemente: ${tags.map(([k, v]) => `${k}=${v}`).join(', ')}`,
+    `Stichworte: ${JSON.stringify(diag.keywords ?? {})}`,
+    `Luftraum-Typen: ${JSON.stringify(diag.aseTypes ?? {})}`,
     ...diag.samples.map((s) => `--- ${s.label} ---\n${s.text}`),
   ].join('\n');
   const copy = async () => {

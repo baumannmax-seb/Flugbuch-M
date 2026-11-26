@@ -63,6 +63,8 @@ export interface OfmxDiag {
   dirsLinked: number;
   dirsWithPattern: number;
   patternValues: Record<string, number>;
+  keywords?: Record<string, number>;
+  aseTypes?: Record<string, number>;
   samples: { label: string; text: string }[];
 }
 export interface OfmxData {
@@ -103,8 +105,8 @@ const num = (s: string) => (s === '' ? null : Number(s));
 const toFt = (v: number | null, uom: string) => (v == null ? null : uom === 'M' ? Math.round(v * 3.28084) : v);
 const toM = (v: number | null, uom: string) => (v == null ? null : uom === 'FT' ? Math.round(v * 0.3048) : v);
 
-const FEATURE_RE = /<(Ahp|Aha|Rwy|Rdn|Dpn|Uni|Fqy)(?=[\s>])[^>]*>[\s\S]*?<\/\1>/g;
-const FEATURE_START_RE = /<(Ahp|Aha|Rwy|Rdn|Dpn|Uni|Fqy)(?=[\s>])/g;
+const FEATURE_RE = /<(Ahp|Aha|Rwy|Rdn|Dpn|Uni|Fqy|Ase)(?=[\s>])[^>]*>[\s\S]*?<\/\1>/g;
+const FEATURE_START_RE = /<(Ahp|Aha|Rwy|Rdn|Dpn|Uni|Fqy|Ase)(?=[\s>])/g;
 
 /** Zustand während des Parsens */
 class Collector {
@@ -118,6 +120,8 @@ class Collector {
   header = '';
   tags: Record<string, number> = {};
   patternValues: Record<string, number> = {};
+  keywords: Record<string, number> = {};
+  aseTypes: Record<string, number> = {};
   samples: { label: string; text: string }[] = [];
   sample(label: string, text: string) {
     if (this.samples.filter((s) => s.label === label).length < 2) this.samples.push({ label, text: text.slice(0, 1500) });
@@ -125,10 +129,12 @@ class Collector {
   /** Rohtext beobachten: Element-Statistik und Stichworte (z.B. Platzrunden) für die Diagnose */
   observe(chunk: string) {
     for (const m of chunk.matchAll(/<([A-Z][a-z]{2})[\s>]/g)) this.tags[m[1]] = (this.tags[m[1]] ?? 0) + 1;
-    for (const m of chunk.matchAll(/circuit|vfrpattern|platzrunde|<Prc[\s>]|TRAFFIC/gi)) {
-      if (this.samples.filter((s) => s.label.startsWith('Stichwort')).length >= 4) break;
+    // Stichworte zählen, je Stichwort bis zu 2 Fundstellen
+    for (const m of chunk.matchAll(/circuit|platzrunde|<Prc[\s>]|<Lbm[\s>]/gi)) {
+      const k = m[0].toLowerCase().replace(/[<\s>]/g, '');
+      this.keywords[k] = (this.keywords[k] ?? 0) + 1;
       const i = m.index ?? 0;
-      this.sample(`Stichwort „${m[0]}“`, chunk.slice(Math.max(0, i - 500), i + 700));
+      this.sample(`Stichwort „${k}“`, chunk.slice(Math.max(0, i - 300), i + 900));
     }
   }
 
@@ -221,6 +227,14 @@ class Collector {
         this.rps.push({ ahp, p: { id, name: tag(after(b, 'DpnUid'), 'txtName') || id, mandatory: type === 'VFR-MRP', lat, lon } });
         break;
       }
+      case 'Ase': {
+        // nur für die Diagnose: welche Luftraum-Typen gibt es (Platzrunden als Lufträume?)
+        const uid = inner(b, 'AseUid');
+        const k = `${tag(uid, 'codeType')}${tag(uid, 'txtLocalType') ? '/' + tag(uid, 'txtLocalType') : ''}`;
+        this.aseTypes[k] = (this.aseTypes[k] ?? 0) + 1;
+        if (this.aseTypes[k] === 1 && Object.keys(this.aseTypes).length <= 12) this.sample(`Ase ${k}`, b.slice(0, 700));
+        break;
+      }
       case 'Uni': {
         const ahp = tag(inner(b, 'AhpUid'), 'codeId');
         if (ahp) this.units[uidKey(inner(b, 'UniUid'))] = ahp;
@@ -273,6 +287,8 @@ class Collector {
           dirsLinked,
           dirsWithPattern: this.dirs.filter((d) => d.dir.pattern).length,
           patternValues: this.patternValues,
+          keywords: this.keywords,
+          aseTypes: this.aseTypes,
           samples: [{ label: 'Kopfzeile', text: this.header }, ...this.samples],
         },
       },
