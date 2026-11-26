@@ -3,6 +3,7 @@ import { db, type LogEntry, type Track } from '../lib/db';
 import { exportBackup } from '../lib/export';
 import { DEFAULT_SETTINGS } from '../lib/flightDetector';
 import type { AppSettings } from '../lib/settings';
+import MapSettings from './MapSettings';
 
 export default function SettingsView({ settings, onChange, onDataChanged }: { settings: AppSettings; onChange: (s: AppSettings) => void; onDataChanged: () => void }) {
   const [reg, setReg] = useState('');
@@ -75,16 +76,7 @@ export default function SettingsView({ settings, onChange, onDataChanged }: { se
         </div>
       </div>
 
-      <div className="card">
-        <h2>Karte</h2>
-        <label>
-          Standard-Kartenlayer
-          <select value={settings.mapLayer} onChange={(e) => onChange({ ...settings, mapLayer: e.target.value as AppSettings['mapLayer'] })}>
-            <option value="topo">OpenTopoMap (Gelände)</option>
-            <option value="osm">OpenStreetMap</option>
-          </select>
-        </label>
-      </div>
+      <MapSettings settings={settings} onChange={onChange} />
 
       <div className="card">
         <h2>Automatische Erkennung</h2>
@@ -115,7 +107,7 @@ export default function SettingsView({ settings, onChange, onDataChanged }: { se
         </div>
       </div>
       <p className="small muted" style={{ textAlign: 'center' }}>
-        Flugbuch M · Draft v0.1 · Flugplatzdaten: OurAirports (Public Domain) · Karten © OpenStreetMap / OpenTopoMap
+        Flugbuch M · Draft v0.1 · Flugplatzdaten: OurAirports (Public Domain) · Karten © OpenStreetMap / OpenTopoMap / openAIP
         <br />
         Kein zugelassenes Navigationsgerät – nur zur Unterstützung.
       </p>

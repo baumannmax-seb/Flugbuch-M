@@ -95,7 +95,7 @@ export default function EntryForm({ initial, settings, isNew = false, onClose }:
           <h3>{isNew ? 'Neuer Flug' : 'Flug bearbeiten'}</h3>
           <button className="ghost" onClick={() => onClose(false)}>✕</button>
         </div>
-        {track && <TrackMap track={track} layer={settings.mapLayer} />}
+        {track && <TrackMap track={track} settings={settings} />}
         <div className="grid2">
           <label>
             Datum

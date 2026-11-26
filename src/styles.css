@@ -147,3 +147,10 @@ table.stats td:not(:first-child), table.stats th:not(:first-child) { text-align:
 @media (orientation: landscape) and (max-height: 500px) {
   .inst .v { font-size: 24px; }
 }
+
+label.check { display: flex; align-items: center; gap: 10px; font-size: 16px; color: var(--text); padding: 8px 0; margin: 0; border-bottom: 1px solid var(--line); }
+label.check input { width: 20px; height: 20px; margin: 0; flex: 0 0 auto; }
+.progress { height: 8px; background: var(--bg); border-radius: 4px; overflow: hidden; margin: 8px 0; }
+.progress > div { height: 100%; background: var(--accent); transition: width .2s; }
+.button-like { display: block; text-align: center; background: var(--panel2); border: 1px solid var(--line); border-radius: 10px; padding: 14px; color: var(--text); font-size: 16px; cursor: pointer; margin: 0; }
+.ok-box { background: rgba(76,175,80,.15); border: 1px solid var(--ok); padding: 10px; border-radius: 10px; }

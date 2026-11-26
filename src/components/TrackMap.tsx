@@ -1,15 +1,18 @@
 import { useEffect, useRef } from 'react';
 import L from 'leaflet';
 import type { Track } from '../lib/db';
-import { tileLayer } from './tiles';
+import { applyLayers } from './tiles';
+import { listMbtiles } from '../lib/mbtiles';
+import type { AppSettings } from '../lib/settings';
 
 /** Statische Karte eines aufgezeichneten Fluges mit Start/Landungs-Markern */
-export default function TrackMap({ track, layer }: { track: Track; layer: 'osm' | 'topo' }) {
+export default function TrackMap({ track, settings }: { track: Track; settings: AppSettings }) {
   const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (!ref.current || track.points.length === 0) return;
     const map = L.map(ref.current, { zoomControl: false, attributionControl: false });
-    tileLayer(layer).addTo(map);
+    let alive = true;
+    listMbtiles().then((mbt) => alive && applyLayers(map, settings, mbt, settings.mapLayer, settings.overlays)).catch(() => {});
     const line = L.polyline(
       track.points.map((p) => [p.lat, p.lon] as [number, number]),
       { color: '#ff4081', weight: 3 }
@@ -22,8 +25,9 @@ export default function TrackMap({ track, layer }: { track: Track; layer: 'osm' 
     }
     map.fitBounds(line.getBounds(), { padding: [20, 20] });
     return () => {
+      alive = false;
       map.remove();
     };
-  }, [track, layer]);
+  }, [track, settings]);
   return <div ref={ref} className="mini-map" />;
 }

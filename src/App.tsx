@@ -90,7 +90,7 @@ export default function App() {
           </button>
         ))}
       </nav>
-      {navOpen && <NavMap recorder={recorder} rec={rec} settings={settings} onClose={() => setNavOpen(false)} />}
+      {navOpen && <NavMap recorder={recorder} rec={rec} settings={settings} onSettings={updateSettings} onClose={() => setNavOpen(false)} />}
     </div>
   );
 }

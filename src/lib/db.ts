@@ -36,11 +36,11 @@ export interface Aircraft {
 }
 
 const DB_NAME = 'flugbuch-m';
-const VERSION = 1;
+const VERSION = 2;
 
 let dbp: Promise<IDBDatabase> | null = null;
 
-function open(): Promise<IDBDatabase> {
+export function openDb(): Promise<IDBDatabase> {
   if (!dbp) {
     dbp = new Promise((resolve, reject) => {
       const req = indexedDB.open(DB_NAME, VERSION);
@@ -49,6 +49,9 @@ function open(): Promise<IDBDatabase> {
         if (!db.objectStoreNames.contains('entries')) db.createObjectStore('entries', { keyPath: 'id' });
         if (!db.objectStoreNames.contains('tracks')) db.createObjectStore('tracks', { keyPath: 'id' });
         if (!db.objectStoreNames.contains('kv')) db.createObjectStore('kv');
+        // v2: Offline-Karten (MBTiles) – Metadaten + einzelne Kacheln als Blob
+        if (!db.objectStoreNames.contains('mbtiles')) db.createObjectStore('mbtiles', { keyPath: 'id' });
+        if (!db.objectStoreNames.contains('tiles')) db.createObjectStore('tiles');
       };
       req.onsuccess = () => resolve(req.result);
       req.onerror = () => reject(req.error);
@@ -58,7 +61,7 @@ function open(): Promise<IDBDatabase> {
 }
 
 function tx<T>(store: string, mode: IDBTransactionMode, fn: (s: IDBObjectStore) => IDBRequest<T>): Promise<T> {
-  return open().then(
+  return openDb().then(
     (db) =>
       new Promise<T>((resolve, reject) => {
         const t = db.transaction(store, mode);

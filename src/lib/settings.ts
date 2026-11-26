@@ -6,7 +6,14 @@ export interface AppSettings {
   aircraft: { reg: string; type: string }[];
   defaultAircraft: string; // reg
   detector: Omit<DetectorSettings, 'fieldElevationFt'>;
-  mapLayer: 'osm' | 'topo';
+  /** Grundkarte: 'topo' | 'osm' | 'custom' | 'mbt:<id>' */
+  mapLayer: string;
+  /** aktive Overlays: 'openaip' | 'mbt:<id>' */
+  overlays: string[];
+  openAipKey: string;
+  openAipUrl: string; // leer = Standard
+  customUrl: string; // eigene XYZ-Kachel-URL
+  customName: string;
 }
 
 export const DEFAULT_APP_SETTINGS: AppSettings = {
@@ -15,6 +22,11 @@ export const DEFAULT_APP_SETTINGS: AppSettings = {
   defaultAircraft: '',
   detector: { ...DEFAULT_SETTINGS },
   mapLayer: 'topo',
+  overlays: ['openaip'],
+  openAipKey: '',
+  openAipUrl: '',
+  customUrl: '',
+  customName: '',
 };
 
 export async function loadSettings(): Promise<AppSettings> {

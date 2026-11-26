@@ -9,7 +9,8 @@ import type { AppSettings } from '../lib/settings';
 import type { GpsPoint } from '../lib/flightDetector';
 import { bearing, distance, fmtDuration, FT_PER_M, KT_PER_MS, NM_IN_M, pad3 } from '../lib/geo';
 import { getAirfieldsSync, nearestAirfield, type Airfield } from '../lib/airfields';
-import { tileLayer } from './tiles';
+import { applyLayers, baseSources, overlaySources } from './tiles';
+import { listMbtiles, type MbtilesMeta } from '../lib/mbtiles';
 import AirfieldSearch from './AirfieldSearch';
 
 const PHASE_TXT = { GROUND: 'AM BODEN', AIRBORNE: 'IN DER LUFT', ROLLOUT: 'AUSROLLEN' } as const;
@@ -17,19 +18,19 @@ const PHASE_TXT = { GROUND: 'AM BODEN', AIRBORNE: 'IN DER LUFT', ROLLOUT: 'AUSRO
 const planeSvg = (color: string) =>
   `<svg viewBox="0 0 64 64" width="44" height="44"><path d="M32 4c2.4 0 4 2.4 4 5.6V24l22 12v6l-22-6.4V50l7 5.4V60l-11-3-11 3v-4.6l7-5.4V35.6L6 42v-6l22-12V9.6C28 6.4 29.6 4 32 4z" fill="${color}" stroke="#000" stroke-width="2"/></svg>`;
 
-export default function NavMap({ recorder, rec, settings, onClose }: { recorder: Recorder; rec: RecorderState; settings: AppSettings; onClose: () => void }) {
+export default function NavMap({ recorder, rec, settings, onSettings, onClose }: { recorder: Recorder; rec: RecorderState; settings: AppSettings; onSettings: (s: AppSettings) => void; onClose: () => void }) {
   const mapDiv = useRef<HTMLDivElement>(null);
   const mapRef = useRef<L.Map | null>(null);
   const planeRef = useRef<L.Marker | null>(null);
   const trackLineRef = useRef<L.Polyline | null>(null);
   const dtoLineRef = useRef<L.Polyline | null>(null);
   const fieldLayerRef = useRef<L.LayerGroup | null>(null);
-  const tileRef = useRef<L.TileLayer | null>(null);
   const drawnPts = useRef(0);
 
   const [follow, setFollow] = useState(true);
   const [trackUp, setTrackUp] = useState(false);
-  const [layer, setLayer] = useState<'osm' | 'topo'>(settings.mapLayer);
+  const [mbt, setMbt] = useState<MbtilesMeta[] | null>(null);
+  const [pickLayer, setPickLayer] = useState(false);
   const [dto, setDto] = useState<Airfield | null>(null);
   const [pickDto, setPickDto] = useState(false);
   const [toast, setToast] = useState<{ text: string; key: number } | null>(null);
@@ -115,12 +116,14 @@ export default function NavMap({ recorder, rec, settings, onClose }: { recorder:
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Kartenlayer
+  // Kartenlayer (Grundkarte + Overlays, inkl. Offline-MBTiles)
   useEffect(() => {
-    const map = mapRef.current!;
-    tileRef.current?.remove();
-    tileRef.current = tileLayer(layer).addTo(map);
-  }, [layer]);
+    listMbtiles().then(setMbt).catch(() => setMbt([]));
+  }, []);
+  useEffect(() => {
+    if (!mapRef.current || !mbt) return;
+    return applyLayers(mapRef.current, settings, mbt, settings.mapLayer, settings.overlays);
+  }, [mbt, settings]);
 
   // Position / Track / Direct-To aktualisieren
   useEffect(() => {
@@ -210,7 +213,7 @@ export default function NavMap({ recorder, rec, settings, onClose }: { recorder:
         <button className={trackUp ? 'on' : ''} onClick={() => setTrackUp(!trackUp)} title="Track-Up / North-Up">{trackUp ? '⬆︎' : 'N'}</button>
         <button onClick={() => mapRef.current?.zoomIn()}>＋</button>
         <button onClick={() => mapRef.current?.zoomOut()}>－</button>
-        <button onClick={() => setLayer(layer === 'topo' ? 'osm' : 'topo')} title="Kartenlayer">🗺</button>
+        <button onClick={() => setPickLayer(true)} title="Karten">🗺</button>
       </div>
 
       {toast && <div key={toast.key} className="toast">{toast.text}</div>}
@@ -242,6 +245,34 @@ export default function NavMap({ recorder, rec, settings, onClose }: { recorder:
         </div>
       </div>
 
+      {pickLayer && mbt && (
+        <div className="sheet-backdrop" onClick={() => setPickLayer(false)}>
+          <div className="sheet" onClick={(e) => e.stopPropagation()}>
+            <div className="sheet-head">
+              <h3>Karte</h3>
+              <button className="ghost" onClick={() => setPickLayer(false)}>✕</button>
+            </div>
+            <h2 className="small muted">GRUNDKARTE</h2>
+            {baseSources(settings, mbt).map((b) => (
+              <label key={b.id} className="check">
+                <input type="radio" checked={settings.mapLayer === b.id} onChange={() => onSettings({ ...settings, mapLayer: b.id })} /> {b.name}
+              </label>
+            ))}
+            <h2 className="small muted">OVERLAYS</h2>
+            {overlaySources(settings, mbt).map((o) => (
+              <label key={o.id} className="check">
+                <input
+                  type="checkbox"
+                  checked={settings.overlays.includes(o.id)}
+                  onChange={(e) => onSettings({ ...settings, overlays: e.target.checked ? [...settings.overlays, o.id] : settings.overlays.filter((x) => x !== o.id) })}
+                />{' '}
+                {o.name}
+              </label>
+            ))}
+            {!settings.openAipKey && <p className="small muted">openAIP-Overlay: API-Key unter Einstellungen → Karten eintragen.</p>}
+          </div>
+        </div>
+      )}
       {pickDto && (
         <div className="sheet-backdrop" onClick={() => setPickDto(false)}>
           <div className="sheet" onClick={(e) => e.stopPropagation()}>
