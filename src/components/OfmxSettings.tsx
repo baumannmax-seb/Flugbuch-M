@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { parseOfmxFile } from '../lib/ofmx';
+import type { OfmxDiag } from '../lib/ofmx';
 import { clearOfmx, ofmxAirportCount, ofmxExpired, ofmxMeta, saveOfmx } from '../lib/ofmxStore';
 
 const d = (s: string) => (s ? new Date(s).toLocaleDateString('de-DE') : '–');
@@ -39,7 +40,7 @@ export default function OfmxSettings() {
       </p>
       {meta && (
         <div className={ofmxExpired() ? 'err' : 'ok-box'} style={{ marginBottom: 10 }}>
-          <b>{meta.regions || 'OFMX'}</b> · {ofmxAirportCount()} Flugplätze · gültig {d(meta.effective)} – {d(meta.expiration)}
+          <b>{meta.regions || 'OFMX'}</b> · {ofmxAirportCount()} Flugplätze · gültig {meta.expiration ? `${d(meta.effective)} – ${d(meta.expiration)}` : `ab ${d(meta.effective)}`}
           {ofmxExpired() && <div>⚠️ Abgelaufen – bitte den aktuellen AIRAC-Stand neu importieren.</div>}
           <div className="small muted">{meta.fileName}</div>
         </div>
@@ -63,6 +64,41 @@ export default function OfmxSettings() {
         </div>
       )}
       {msg && <div className={msg.ok ? 'ok-box' : 'err'} style={{ marginTop: 10 }}>{msg.text}</div>}
+      {meta?.diag && <Diag diag={meta.diag} />}
     </div>
+  );
+}
+
+/** Diagnose: zeigt, wie die importierte Datei aufgebaut ist (zum Anpassen des Parsers) */
+function Diag({ diag }: { diag: OfmxDiag }) {
+  const [copied, setCopied] = useState(false);
+  const tags = Object.entries(diag.tags).sort((a, b) => b[1] - a[1]);
+  const text = [
+    `Pisten: ${diag.runways}, Pistenrichtungen: ${diag.dirs} (zugeordnet ${diag.dirsLinked}, mit Platzrundenrichtung ${diag.dirsWithPattern})`,
+    `codeVfrPattern-Werte: ${JSON.stringify(diag.patternValues)}`,
+    `Elemente: ${tags.map(([k, v]) => `${k}=${v}`).join(', ')}`,
+    ...diag.samples.map((s) => `--- ${s.label} ---\n${s.text}`),
+  ].join('\n');
+  const copy = async () => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopied(true);
+    } catch {
+      setCopied(false);
+      alert('Kopieren nicht möglich – bitte Screenshot schicken.');
+    }
+  };
+  return (
+    <details className="section" style={{ marginTop: 12, borderBottom: 0 }}>
+      <summary className="small">Diagnose der OFMX-Datei</summary>
+      <div className="body small">
+        <p style={{ margin: '0 0 6px' }}>
+          Pisten: <b>{diag.runways}</b> · Richtungen: <b>{diag.dirs}</b> (zugeordnet {diag.dirsLinked}) · mit Platzrundenrichtung: <b>{diag.dirsWithPattern}</b>
+        </p>
+        <p style={{ margin: '0 0 6px', wordBreak: 'break-word' }}>Elemente: {tags.slice(0, 30).map(([k, v]) => `${k} ${v}`).join(' · ')}</p>
+        <button onClick={copy}>{copied ? '✓ Kopiert – jetzt in den Chat einfügen' : 'Diagnose kopieren'}</button>
+        <pre style={{ whiteSpace: 'pre-wrap', fontSize: 11, maxHeight: 260, overflow: 'auto', background: 'var(--paper-2)', padding: 8, marginTop: 8 }}>{text}</pre>
+      </div>
+    </details>
   );
 }

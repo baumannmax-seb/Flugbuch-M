@@ -56,8 +56,17 @@ export interface OfmxAirport {
   freqs: { service: string; callsign: string; mhz: string }[];
   rps: OfmxReportingPoint[];
 }
+export interface OfmxDiag {
+  tags: Record<string, number>; // Anzahl je Feature-Element (z.B. Ahp, Rwy, Rdn, Ase …)
+  runways: number;
+  dirs: number;
+  dirsLinked: number;
+  dirsWithPattern: number;
+  patternValues: Record<string, number>;
+  samples: { label: string; text: string }[];
+}
 export interface OfmxData {
-  meta: { regions: string; created: string; effective: string; expiration: string; importedAt: number; fileName: string };
+  meta: { regions: string; created: string; effective: string; expiration: string; importedAt: number; fileName: string; diag?: OfmxDiag };
   airports: Record<string, OfmxAirport>;
 }
 
@@ -107,6 +116,21 @@ class Collector {
   freqs: { uni: string; f: OfmxAirport['freqs'][number] }[] = [];
   rps: { ahp: string; p: OfmxReportingPoint }[] = [];
   header = '';
+  tags: Record<string, number> = {};
+  patternValues: Record<string, number> = {};
+  samples: { label: string; text: string }[] = [];
+  sample(label: string, text: string) {
+    if (this.samples.filter((s) => s.label === label).length < 2) this.samples.push({ label, text: text.slice(0, 1500) });
+  }
+  /** Rohtext beobachten: Element-Statistik und Stichworte (z.B. Platzrunden) für die Diagnose */
+  observe(chunk: string) {
+    for (const m of chunk.matchAll(/<([A-Z][a-z]{2})[\s>]/g)) this.tags[m[1]] = (this.tags[m[1]] ?? 0) + 1;
+    for (const m of chunk.matchAll(/circuit|vfrpattern|platzrunde|<Prc[\s>]|TRAFFIC/gi)) {
+      if (this.samples.filter((s) => s.label.startsWith('Stichwort')).length >= 4) break;
+      const i = m.index ?? 0;
+      this.sample(`Stichwort „${m[0]}“`, chunk.slice(Math.max(0, i - 500), i + 700));
+    }
+  }
 
   feature(kind: string, b: string) {
     switch (kind) {
@@ -142,6 +166,7 @@ class Collector {
         break;
       }
       case 'Rwy': {
+        this.sample('Rwy (Piste)', b);
         const uid = inner(b, 'RwyUid');
         const ahp = tag(inner(uid, 'AhpUid'), 'codeId');
         const desig = tag(after(uid, 'AhpUid'), 'txtDesig');
@@ -159,6 +184,7 @@ class Collector {
         break;
       }
       case 'Rdn': {
+        this.sample('Rdn (Pistenrichtung)', b);
         const uid = inner(b, 'RdnUid');
         const rwyUid = inner(uid, 'RwyUid');
         const ahp = tag(inner(rwyUid, 'AhpUid'), 'codeId');
@@ -166,6 +192,7 @@ class Collector {
         const desig = tag(after(uid, 'RwyUid'), 'txtDesig');
         const rest = after(b, 'RdnUid');
         const p = tag(rest, 'codeVfrPattern').toUpperCase();
+        this.patternValues[p || '(leer)'] = (this.patternValues[p || '(leer)'] ?? 0) + 1;
         if (!ahp || !desig) return;
         this.dirs.push({
           ahp,
@@ -216,9 +243,13 @@ class Collector {
       const { ahp, ...rwy } = r;
       this.airports[ahp]?.runways.push(rwy);
     }
+    let dirsLinked = 0;
     for (const { ahp, rwy, dir } of this.dirs) {
       const r = this.runways[`${ahp}|${rwy}`];
-      if (r) r.dirs.push(dir);
+      if (r) {
+        r.dirs.push(dir);
+        dirsLinked++;
+      }
     }
     for (const { ahp, a } of this.addresses) this.airports[ahp]?.addresses.push(a);
     for (const { ahp, p } of this.rps) this.airports[ahp]?.rps.push(p);
@@ -228,7 +259,23 @@ class Collector {
     }
     const attr = (n: string) => this.header.match(new RegExp(`${n}="([^"]*)"`))?.[1] ?? '';
     return {
-      meta: { regions: attr('regions'), created: attr('created'), effective: attr('effective'), expiration: attr('expiration'), importedAt: Date.now(), fileName },
+      meta: {
+        regions: attr('regions'),
+        created: attr('created'),
+        effective: attr('effective'),
+        expiration: attr('expiration'),
+        importedAt: Date.now(),
+        fileName,
+        diag: {
+          tags: this.tags,
+          runways: Object.keys(this.runways).length,
+          dirs: this.dirs.length,
+          dirsLinked,
+          dirsWithPattern: this.dirs.filter((d) => d.dir.pattern).length,
+          patternValues: this.patternValues,
+          samples: [{ label: 'Kopfzeile', text: this.header }, ...this.samples],
+        },
+      },
       airports: this.airports,
     };
   }
@@ -240,6 +287,7 @@ export function createOfmxParser() {
   let buf = '';
   return {
     push(chunk: string) {
+      c.observe(chunk);
       buf += chunk;
       if (!c.header) {
         const h = buf.match(/<OFMX-Snapshot[^>]*>/);
