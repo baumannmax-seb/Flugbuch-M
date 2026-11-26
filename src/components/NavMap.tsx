@@ -12,6 +12,8 @@ import { getAirfieldsSync, nearestAirfield, type Airfield } from '../lib/airfiel
 import { applyLayers, baseSources, overlaySources } from './tiles';
 import { listMbtiles, type MbtilesMeta } from '../lib/mbtiles';
 import AirfieldSearch from './AirfieldSearch';
+import AirfieldSheet from './AirfieldSheet';
+import { circuitPath, DEFAULT_CIRCUIT, getDetailsSync, getFieldData, listFieldsWithCircuits, loadDetails, runwayEnds } from '../lib/airfieldDetails';
 
 const PHASE_TXT = { GROUND: 'AM BODEN', AIRBORNE: 'IN DER LUFT', ROLLOUT: 'AUSROLLEN' } as const;
 
@@ -25,6 +27,7 @@ export default function NavMap({ recorder, rec, settings, onSettings, onClose }:
   const trackLineRef = useRef<L.Polyline | null>(null);
   const dtoLineRef = useRef<L.Polyline | null>(null);
   const fieldLayerRef = useRef<L.LayerGroup | null>(null);
+  const circuitLayerRef = useRef<L.LayerGroup | null>(null);
   const drawnPts = useRef(0);
 
   const [follow, setFollow] = useState(true);
@@ -33,10 +36,13 @@ export default function NavMap({ recorder, rec, settings, onSettings, onClose }:
   const [pickLayer, setPickLayer] = useState(false);
   const [dto, setDto] = useState<Airfield | null>(null);
   const [pickDto, setPickDto] = useState(false);
+  const [selField, setSelField] = useState<Airfield | null>(null);
+  const [fieldsVer, setFieldsVer] = useState(0);
   const [toast, setToast] = useState<{ text: string; key: number } | null>(null);
   const [ownPos, setOwnPos] = useState<GpsPoint | null>(null);
   const [gpsErr, setGpsErr] = useState<string | null>(null);
   const lastTrack = useRef(0);
+  const firstFix = useRef(false);
 
   // Position: aus laufender Aufzeichnung oder eigener GPS-Abfrage (Navi ohne Aufzeichnung)
   useEffect(() => {
@@ -91,6 +97,7 @@ export default function NavMap({ recorder, rec, settings, onSettings, onClose }:
     }).addTo(map);
     trackLineRef.current = L.polyline([], { color: '#ff4081', weight: 3, opacity: 0.9 }).addTo(map);
     dtoLineRef.current = L.polyline([], { color: '#e040fb', weight: 3, dashArray: '8 6' }).addTo(map);
+    circuitLayerRef.current = L.layerGroup().addTo(map);
     fieldLayerRef.current = L.layerGroup().addTo(map);
     map.on('dragstart', () => setFollow(false));
     const drawFields = () => {
@@ -98,13 +105,28 @@ export default function NavMap({ recorder, rec, settings, onSettings, onClose }:
       g.clearLayers();
       if (map.getZoom() < 8) return;
       const b = map.getBounds().pad(0.2);
+      const z = map.getZoom();
       for (const f of getAirfieldsSync()) {
         if (!b.contains([f.lat, f.lon])) continue;
-        L.circleMarker([f.lat, f.lon], { radius: 6, color: '#00e5ff', weight: 2, fillColor: '#0b1d33', fillOpacity: 0.9 })
-          .bindTooltip(f.icao, { permanent: map.getZoom() >= 10, direction: 'right', className: 'af-label' })
+        // Pisten ab Zoom 11 (aus Flugplatzdetails)
+        if (z >= 11) {
+          for (const r of getDetailsSync(f.icao)?.runways ?? []) {
+            const e = runwayEnds(f, r);
+            if (!e) continue;
+            const w = Math.max(4, Math.min(14, (r.widthFt * 0.3048 * 2 ** (z - 12)) / 9));
+            L.polyline([e.a, e.b], { color: /GR|TURF/i.test(r.surface) ? '#66bb6a' : '#eceff1', weight: w, opacity: 0.9, interactive: false, dashArray: e.approx ? '6 4' : undefined }).addTo(g);
+          }
+        }
+        // großes, unsichtbares Tippziel + sichtbarer Kreis
+        L.circleMarker([f.lat, f.lon], { radius: 18, stroke: false, fillOpacity: 0, bubblingMouseEvents: false })
+          .on('click', () => setSelField(f))
+          .addTo(g);
+        L.circleMarker([f.lat, f.lon], { radius: 6, color: '#00e5ff', weight: 2, fillColor: '#0b1d33', fillOpacity: 0.9, interactive: false })
+          .bindTooltip(f.icao, { permanent: z >= 10, direction: 'right', className: 'af-label' })
           .addTo(g);
       }
     };
+    loadDetails().then(drawFields);
     map.on('moveend zoomend', drawFields);
     drawFields();
     mapRef.current = map;
@@ -125,6 +147,38 @@ export default function NavMap({ recorder, rec, settings, onSettings, onClose }:
     return applyLayers(mapRef.current, settings, mbt, settings.mapLayer, settings.overlays);
   }, [mbt, settings]);
 
+  // Schematische Platzrunden: für Plätze mit gewählter Landerichtung
+  useEffect(() => {
+    let alive = true;
+    (async () => {
+      await loadDetails();
+      const icaos = await listFieldsWithCircuits();
+      const g = circuitLayerRef.current;
+      if (!alive || !g) return;
+      g.clearLayers();
+      for (const icao of icaos) {
+        const f = getAirfieldsSync().find((a) => a.icao === icao);
+        const fd = await getFieldData(icao);
+        if (!f || !fd.active) continue;
+        const r = getDetailsSync(icao)?.runways.find((x) => x.le === fd.active || x.he === fd.active);
+        const e = r && runwayEnds(f, r);
+        if (!r || !e) continue;
+        const [thr, end] = r.le === fd.active ? [e.a, e.b] : [e.b, e.a];
+        const cfg = { ...DEFAULT_CIRCUIT, ...fd.circuits[fd.active] };
+        const path = circuitPath(thr, end, cfg);
+        L.polyline(path, { color: '#ffab00', weight: 3, dashArray: '10 6', interactive: false }).addTo(g);
+        const mid: [number, number] = [(path[3][0] + path[4][0]) / 2, (path[3][1] + path[4][1]) / 2];
+        L.marker(mid, {
+          interactive: false,
+          icon: L.divIcon({ className: 'circuit-label', html: `${icao} ${fd.active} ${cfg.dir === 'L' ? 'links' : 'rechts'}${cfg.altFt ? ' · ' + cfg.altFt : ''}`, iconSize: [160, 20], iconAnchor: [80, 10] }),
+        }).addTo(g);
+      }
+    })();
+    return () => {
+      alive = false;
+    };
+  }, [fieldsVer]);
+
   // Position / Track / Direct-To aktualisieren
   useEffect(() => {
     const map = mapRef.current;
@@ -144,7 +198,11 @@ export default function NavMap({ recorder, rec, settings, onSettings, onClose }:
     drawnPts.current = pts.length;
 
     dtoLineRef.current!.setLatLngs(dto ? [ll, [dto.lat, dto.lon]] : []);
-    if (follow) map.panTo(ll, { animate: true, duration: 0.5 });
+    if (!firstFix.current) {
+      // erster GPS-Fix: auf Position zoomen
+      firstFix.current = true;
+      if (map.getZoom() < 10) map.setView(ll, 11, { animate: false });
+    } else if (follow) map.panTo(ll, { animate: true, duration: 0.5 });
   }, [pos, follow, dto, trackUp, trk, rec.points]);
 
   // Bei Track-Up wird die Karte gedreht → Ziehen deaktivieren
@@ -241,7 +299,7 @@ export default function NavMap({ recorder, rec, settings, onSettings, onClose }:
           <button onClick={() => (dto ? setDto(null) : setPickDto(true))}>{dto ? 'D→ aus' : 'D→'}</button>
           {near && !dto && <button onClick={() => setDto(near.field)} title="Direct-To nächster Platz">NRST</button>}
           {rec.active && <button onClick={() => confirm('Aufzeichnung beenden und Flug speichern?') && recorder.stop()}>■</button>}
-          <button onClick={onClose}>✕</button>
+          <button className="close-big" onClick={onClose} aria-label="Navi schließen">✕</button>
         </div>
       </div>
 
@@ -250,7 +308,7 @@ export default function NavMap({ recorder, rec, settings, onSettings, onClose }:
           <div className="sheet" onClick={(e) => e.stopPropagation()}>
             <div className="sheet-head">
               <h3>Karte</h3>
-              <button className="ghost" onClick={() => setPickLayer(false)}>✕</button>
+              <button className="ghost close-x" onClick={() => setPickLayer(false)}>✕</button>
             </div>
             <h2 className="small muted">GRUNDKARTE</h2>
             {baseSources(settings, mbt).map((b) => (
@@ -273,12 +331,24 @@ export default function NavMap({ recorder, rec, settings, onSettings, onClose }:
           </div>
         </div>
       )}
+      {selField && (
+        <AirfieldSheet
+          field={selField}
+          pos={pos}
+          onClose={() => setSelField(null)}
+          onDirectTo={(f) => {
+            setDto(f);
+            setSelField(null);
+          }}
+          onChanged={() => setFieldsVer((v) => v + 1)}
+        />
+      )}
       {pickDto && (
         <div className="sheet-backdrop" onClick={() => setPickDto(false)}>
           <div className="sheet" onClick={(e) => e.stopPropagation()}>
             <div className="sheet-head">
               <h3>Direct-To</h3>
-              <button className="ghost" onClick={() => setPickDto(false)}>✕</button>
+              <button className="ghost close-x" onClick={() => setPickDto(false)}>✕</button>
             </div>
             <AirfieldSearch onPick={(a) => { setDto(a); setPickDto(false); }} />
           </div>

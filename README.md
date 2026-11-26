@@ -10,9 +10,10 @@ Touch-and-Go und Full-Stop** – ohne etwas tippen zu müssen – und einem **Vo
 
 | Bereich | Was geht schon |
 |---|---|
-| **Flugbuch** | Einträge mit Datum, Kennzeichen, Muster, Von/Nach, Off-Block/Start/Landung/On-Block, Flug- & Blockzeit, Landungen, Touch-and-Gos, Funktion (PIC/Dual/FI), Bemerkungen. Suche, manuelle Einträge, Bearbeiten, CSV-Export (Excel), GPX-Export je Flug |
+| **Flugbuch** | Einträge mit Datum, Kennzeichen, Muster, Von/Nach, Off-Block/Start/Landung/On-Block, Flug- & Blockzeit, Landungen, Touch-and-Gos, Funktion (PIC / Schulung mit **Fluglehrer** / als FI mit **Flugschüler**), Bemerkungen. Suche, manuelle Einträge, Bearbeiten, CSV-Export (Excel), GPX-Export je Flug |
+| **CSV-Import** | Import aus b4takeoff, mein-flugbuch, UL-Flugbuch, Excel o.ä.: Trennzeichen, Zeichensatz, Kopfzeile und Spalten werden automatisch erkannt (deutsche + englische Spaltennamen), Zuordnung vor dem Import prüf- und änderbar, Vorschau, Duplikate werden übersprungen |
 | **GPS-Aufzeichnung** | Start drücken, Handy ablegen. Start/Landung/T&G/Full-Stop werden erkannt, Start- und Zielplatz automatisch aus der Flugplatzdatenbank (841 Plätze in DE inkl. UL-Plätzen + Nachbarländer) ermittelt. Nach 2 min Stillstand nach der letzten Landung wird der Flug automatisch gespeichert. Aufzeichnung übersteht ein Neuladen der Seite. |
-| **Navi / Moving Map** | Vollbild-Karte mit GS (kt), GPS-Höhe (ft), Vario (fpm), Track (°), Flugzeug-Symbol, geflogener Track, Flugplätze auf der Karte, nächster Platz mit Kurs/Distanz, Direct-To mit Kurs/Distanz/ETE, North-Up/Track-Up, Bildschirm bleibt an (Wake Lock), Meldungen „Start erkannt“, „Touch-and-Go erkannt“ … |
+| **Navi / Moving Map** | Vollbild-Karte mit GS (kt), GPS-Höhe (ft), Vario (fpm), Track (°), Flugzeug-Symbol, geflogener Track, Flugplätze und Pisten auf der Karte, **Platz antippen → Details** (Pisten, Frequenzen, Links, eigene Notizen und Anflugkarten als PDF/Bild), **schematische Platzrunde** je Landerichtung (links/rechts, Abstand, Höhe einstellbar), nächster Platz mit Kurs/Distanz, Direct-To mit Kurs/Distanz/ETE, North-Up/Track-Up, Bildschirm bleibt an (Wake Lock), Meldungen „Start erkannt“, „Touch-and-Go erkannt“ … |
 | **Karten** | Grundkarte OpenTopoMap / OpenStreetMap / eigene XYZ-URL, **openAIP-Overlay** (Lufträume, Plätze, Frequenzen – eigener kostenloser API-Key), **Offline-Karten aus MBTiles** (Import aus der Dateien-App, danach ohne Internet nutzbar; transparente Karten automatisch als Overlay, deckende als Grundkarte; über die höchste Zoomstufe wird hochskaliert) |
 | **Auswertung** | Gesamtstunden, Flüge, Landungen, Passagiermitnahme (3 Landungen / 90 Tage), letzte 24 Monate, nach Luftfahrzeug und Jahr |
 | **Simulator** | Spielt an einem beliebigen Platz eine Platzrunde mit Touch-and-Go + Full-Stop ab (Zeitraffer bis 30×) – zum Testen am Schreibtisch |
@@ -63,6 +64,8 @@ GitHub Pages – der Workflow `.github/workflows/pages.yml` ist schon da:
 - **openAIP-Overlay** braucht Internet (gesehene Kacheln werden gecacht). Die Standard-Kachel-URL ist unter
   *Einstellungen → Karten → Erweitert* änderbar, falls openAIP sie ändert.
 - **Höhe** ist GPS-Höhe, keine barometrische Höhe.
+- **Platzrunden** sind schematisch aus der Pistenlage erzeugt – die veröffentlichten Platzrunden (AIP VFR / DFS) sind nicht frei verfügbar. Richtung/Abstand/Höhe pro Platz selbst einstellen; amtliche Sichtanflugkarte kann je Platz als PDF/Bild hinterlegt werden.
+- **Platzdaten** (Pisten, Frequenzen) aus OurAirports – ohne Gewähr, vor dem Flug amtlich prüfen.
 - Kein zugelassenes Navigationsgerät – nur zur Unterstützung.
 
 ## Roadmap
@@ -86,6 +89,8 @@ src/lib/recorder.ts         GPS/Simulator → Detector → Flugbucheintrag
 src/lib/simulator.ts        Platzrunden-Simulation
 src/lib/airfields.ts        Flugplatzdatenbank, nächster Platz, Suche
 src/lib/db.ts               IndexedDB
+src/lib/csvImport.ts        CSV-Import mit Spaltenerkennung (getestet)
+src/lib/airfieldDetails.ts  Pisten, Frequenzen, Platzrunden-Geometrie, eigene Platznotizen
 src/lib/mbtiles.ts          MBTiles-Import (sql.js) + Leaflet-Layer aus IndexedDB
 src/components/tiles.ts     Kartenquellen (Grundkarten, openAIP, MBTiles)
 src/components/NavMap.tsx   Vollbild-Navi / Moving Map

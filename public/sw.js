@@ -1,9 +1,9 @@
 // Einfacher Service Worker: App-Shell offline verfügbar, Kartenkacheln werden beim Ansehen gecacht.
-const APP_CACHE = 'flugbuch-app-v1';
+const APP_CACHE = 'flugbuch-app-v2';
 const TILE_CACHE = 'flugbuch-tiles-v1';
 
 self.addEventListener('install', (e) => {
-  e.waitUntil(caches.open(APP_CACHE).then((c) => c.addAll(['./', './index.html', './airfields.json', './manifest.webmanifest', './icon.svg'])));
+  e.waitUntil(caches.open(APP_CACHE).then((c) => c.addAll(['./', './index.html', './airfields.json', './airfield-details.json', './manifest.webmanifest', './icon.svg'])));
   self.skipWaiting();
 });
 

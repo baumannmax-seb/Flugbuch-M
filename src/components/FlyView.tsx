@@ -9,18 +9,21 @@ const PHASE_TXT = { GROUND: 'Am Boden', AIRBORNE: 'In der Luft', ROLLOUT: 'Ausro
 
 export default function FlyView({ recorder, rec, settings, onOpenNav, onShowLog }: { recorder: Recorder; rec: RecorderState; settings: AppSettings; onOpenNav: () => void; onShowLog: () => void }) {
   const [reg, setReg] = useState(recorder.aircraftReg || settings.defaultAircraft);
+  const [crew, setCrew] = useState(recorder.crew);
   const [simField, setSimField] = useState<Airfield | null>(null);
   const [pickSim, setPickSim] = useState(false);
   const [speedup, setSpeedup] = useState(10);
 
   const startGps = () => {
     recorder.aircraftReg = reg;
+    recorder.crew = crew;
     recorder.start('gps');
     onOpenNav();
   };
   const startSim = () => {
     if (!simField) return;
     recorder.aircraftReg = reg;
+    recorder.crew = crew;
     recorder.start('sim', { lat: simField.lat, lon: simField.lon, elevFt: simField.elevFt, speedup });
     onOpenNav();
   };
@@ -74,6 +77,28 @@ export default function FlyView({ recorder, rec, settings, onOpenNav, onShowLog 
             ))}
           </select>
         </label>
+        <div className="grid2">
+          <label>
+            Funktion
+            <select value={crew.role} onChange={(e) => setCrew({ ...crew, role: e.target.value as typeof crew.role })}>
+              <option value="PIC">PIC (allein / verantwortlich)</option>
+              <option value="DUAL">Schulung mit Fluglehrer</option>
+              <option value="FI">Ich als Fluglehrer</option>
+            </select>
+          </label>
+          {crew.role === 'DUAL' && (
+            <label>
+              Fluglehrer
+              <input value={crew.instructor} placeholder="Name FI" onChange={(e) => setCrew({ ...crew, instructor: e.target.value })} />
+            </label>
+          )}
+          {crew.role === 'FI' && (
+            <label>
+              Flugschüler
+              <input value={crew.student} placeholder="Name Schüler" onChange={(e) => setCrew({ ...crew, student: e.target.value })} />
+            </label>
+          )}
+        </div>
         <button className="primary big" onClick={startGps}>▶ GPS-Aufzeichnung starten</button>
         <p className="small muted">
           Einfach vor dem Rollen starten und das Handy ablegen. Start, jede Landung, Touch-and-Go und Full-Stop werden

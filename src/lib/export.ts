@@ -26,6 +26,8 @@ const COLS: [string, (e: LogEntry) => string | number][] = [
   ['Touch-and-Go', (e) => e.touchAndGos],
   ['PIC', (e) => e.pic],
   ['Funktion', (e) => e.role],
+  ['Fluglehrer', (e) => e.instructor ?? ''],
+  ['Flugschüler', (e) => e.student ?? ''],
   ['Bemerkungen', (e) => e.remarks],
 ];
 

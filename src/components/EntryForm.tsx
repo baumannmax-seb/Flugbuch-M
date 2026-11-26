@@ -50,6 +50,10 @@ export function emptyEntry(settings: AppSettings): LogEntry {
 export default function EntryForm({ initial, settings, isNew = false, onClose }: { initial: LogEntry; settings: AppSettings; isNew?: boolean; onClose: (changed: boolean) => void }) {
   const [e, setE] = useState<LogEntry>(initial);
   const [track, setTrack] = useState<Track | null>(null);
+  const [knownNames, setKnownNames] = useState<string[]>([]);
+  useEffect(() => {
+    db.listEntries().then((l) => setKnownNames([...new Set(l.flatMap((x) => [x.pic, x.instructor ?? '', x.student ?? '']).filter(Boolean))].sort()));
+  }, []);
 
   useEffect(() => {
     if (initial.trackId) db.getTrack(initial.trackId).then((t) => setTrack(t ?? null));
@@ -93,7 +97,7 @@ export default function EntryForm({ initial, settings, isNew = false, onClose }:
       <div className="sheet" onClick={(ev) => ev.stopPropagation()}>
         <div className="sheet-head">
           <h3>{isNew ? 'Neuer Flug' : 'Flug bearbeiten'}</h3>
-          <button className="ghost" onClick={() => onClose(false)}>✕</button>
+          <button className="ghost close-x" onClick={() => onClose(false)}>✕</button>
         </div>
         {track && <TrackMap track={track} settings={settings} />}
         <div className="grid2">
@@ -147,10 +151,27 @@ export default function EntryForm({ initial, settings, isNew = false, onClose }:
           <label>davon T&G<input type="number" min={0} value={e.touchAndGos} onChange={(ev) => set('touchAndGos', Number(ev.target.value))} /></label>
         </div>
         <p className="small muted" style={{ marginTop: -4 }}>Flugzeit {fmtDuration(e.flightMin * 60000)} h · Blockzeit {fmtDuration(e.blockMin * 60000)} h</p>
-        <label>
-          PIC / Pilot
-          <input value={e.pic} onChange={(ev) => set('pic', ev.target.value)} />
-        </label>
+        <div className="grid2">
+          <label>
+            PIC / Pilot
+            <input list="name-list" value={e.pic} onChange={(ev) => set('pic', ev.target.value)} />
+          </label>
+          {e.role === 'DUAL' && (
+            <label>
+              Fluglehrer
+              <input list="name-list" value={e.instructor ?? ''} placeholder="Name FI" onChange={(ev) => set('instructor', ev.target.value)} />
+            </label>
+          )}
+          {e.role === 'FI' && (
+            <label>
+              Flugschüler
+              <input list="name-list" value={e.student ?? ''} placeholder="Name Schüler" onChange={(ev) => set('student', ev.target.value)} />
+            </label>
+          )}
+        </div>
+        <datalist id="name-list">
+          {knownNames.map((n) => <option key={n} value={n} />)}
+        </datalist>
         <label>
           Bemerkungen
           <textarea rows={2} value={e.remarks} onChange={(ev) => set('remarks', ev.target.value)} />

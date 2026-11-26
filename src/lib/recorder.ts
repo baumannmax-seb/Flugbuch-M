@@ -28,6 +28,7 @@ interface PersistedSession {
   startedAt: number;
   points: GpsPoint[];
   aircraftReg: string;
+  crew?: Crew;
 }
 
 const fieldElev = (lat: number, lon: number) => nearestAirfield(lat, lon, 3000)?.field.elevFt ?? null;
@@ -41,6 +42,7 @@ export class Recorder {
   private lastPersist = 0;
   private stopping = false;
   aircraftReg = '';
+  crew: Crew = { role: 'PIC', instructor: '', student: '' };
   state: RecorderState = { active: false, source: null, startedAt: null, last: null, points: [], snap: null, error: null, savedEntryId: null };
 
   constructor(private getSettings: () => AppSettings, private onEntrySaved: (e: LogEntry) => void) {}
@@ -70,6 +72,7 @@ export class Recorder {
     }
     this.sessionId = s.id;
     this.aircraftReg = s.aircraftReg;
+    if (s.crew) this.crew = s.crew;
     this.detector = this.newDetector();
     for (const p of s.points) this.detector.push(p);
     this.emit({ active: true, source: 'gps', startedAt: s.startedAt, points: s.points, last: s.points[s.points.length - 1] ?? null, snap: this.detector.snapshot(), savedEntryId: null });
@@ -128,7 +131,7 @@ export class Recorder {
     if (!silent) this.emit({ points, last: p, snap: this.detector.snapshot(p.t), error: null });
     if (this.state.source === 'gps' && p.t - this.lastPersist > 10000) {
       this.lastPersist = p.t;
-      db.set('activeSession', { id: this.sessionId, source: 'gps', startedAt: this.state.startedAt, points, aircraftReg: this.aircraftReg } as PersistedSession);
+      db.set('activeSession', { id: this.sessionId, source: 'gps', startedAt: this.state.startedAt, points, aircraftReg: this.aircraftReg, crew: this.crew } as PersistedSession);
     }
     if (this.detector.finished) this.stop();
   }
@@ -145,7 +148,7 @@ export class Recorder {
     const snap = d.snapshot();
     let savedEntryId: string | null = null;
     if (snap.takeoffs > 0) {
-      const entry = buildEntry(snap, this.state.points, this.sessionId, this.aircraftReg, this.getSettings());
+      const entry = buildEntry(snap, this.state.points, this.sessionId, this.aircraftReg, this.getSettings(), this.crew);
       if (this.state.source === 'sim') entry.remarks = `SIMULATION${entry.remarks ? ' – ' + entry.remarks : ''}`;
       await db.putTrack({ id: this.sessionId, points: this.state.points, events: snap.events });
       await db.putEntry(entry);
@@ -158,7 +161,13 @@ export class Recorder {
   }
 }
 
-export function buildEntry(snap: DetectorSnapshot, points: GpsPoint[], trackId: string, reg: string, settings: AppSettings): LogEntry {
+export interface Crew {
+  role: LogEntry['role'];
+  instructor: string;
+  student: string;
+}
+
+export function buildEntry(snap: DetectorSnapshot, points: GpsPoint[], trackId: string, reg: string, settings: AppSettings, crew?: Crew): LogEntry {
   const takeoffs = snap.events.filter((e) => e.type === 'takeoff');
   const landings = snap.events.filter((e) => e.type === 'landing');
   const firstTo = takeoffs[0];
@@ -189,8 +198,10 @@ export function buildEntry(snap: DetectorSnapshot, points: GpsPoint[], trackId: 
     blockMin: offBlock && onBlock ? Math.round((onBlock - offBlock) / 60000) : 0,
     landings: landings.length,
     touchAndGos: snap.touchAndGos,
-    pic: settings.pilotName,
-    role: 'PIC',
+    pic: crew?.role === 'DUAL' && crew.instructor ? crew.instructor : settings.pilotName,
+    role: crew?.role ?? 'PIC',
+    instructor: crew?.role === 'DUAL' ? crew.instructor : undefined,
+    student: crew?.role === 'FI' ? crew.student : undefined,
     remarks: snap.touchAndGos ? `${snap.touchAndGos}× Touch-and-Go (automatisch erkannt)` : '',
     trackId,
     createdAt: Date.now(),

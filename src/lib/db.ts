@@ -18,6 +18,10 @@ export interface LogEntry {
   touchAndGos: number;
   pic: string;
   role: 'PIC' | 'DUAL' | 'FI' | 'PAX';
+  /** Fluglehrer (bei Schulungsflug / Dual) */
+  instructor?: string;
+  /** Flugschüler (wenn selbst als FI geflogen) */
+  student?: string;
   remarks: string;
   trackId?: string;
   createdAt: number;

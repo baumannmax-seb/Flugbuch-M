@@ -45,6 +45,25 @@ export default function Stats({ entries }: { entries: LogEntry[] }) {
       </div>
 
       <div className="card">
+        <h2>Nach Funktion</h2>
+        <table className="stats">
+          <tbody>
+            {(
+              [
+                ['PIC', 'PIC'],
+                ['DUAL', 'Schulung (mit FI)'],
+                ['FI', 'als Fluglehrer'],
+                ['PAX', 'Mitflug'],
+              ] as const
+            ).map(([k, label]) => {
+              const s = sum(entries.filter((e) => e.role === k));
+              return s.n ? <tr key={k}><td>{label}</td><td>{s.n} Flüge</td><td>{fmtDuration(s.min * 60000)}</td></tr> : null;
+            })}
+          </tbody>
+        </table>
+      </div>
+
+      <div className="card">
         <h2>Passagiermitnahme (90 Tage)</h2>
         <p style={{ margin: 0, fontSize: 18 }} className={ldg90 >= 3 ? 'status-ok' : 'status-bad'}>
           {ldg90 >= 3 ? '✓' : '✗'} {ldg90} Landungen in 90 Tagen (min. 3)
