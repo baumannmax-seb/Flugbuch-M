@@ -1,0 +1,14 @@
+{
+  "name": "Flugbuch M",
+  "short_name": "Flugbuch",
+  "description": "Flugbuch mit GPS-Aufzeichnung, automatischer Start/Landungs-Erkennung und Moving Map",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#0b1d33",
+  "theme_color": "#0b1d33",
+  "icons": [
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}
