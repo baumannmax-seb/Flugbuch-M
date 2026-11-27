@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { db, type LogEntry, type Track } from '../lib/db';
 import { exportBackup } from '../lib/export';
 import { DEFAULT_SETTINGS } from '../lib/flightDetector';
@@ -44,10 +45,23 @@ export default function SettingsView({
     }
   };
 
-  const num = (k: keyof typeof det, label: string, unit: string) => (
-    <label>
-      {label} ({unit})
-      <input type="number" value={det[k] as number} onChange={(e) => setDet(k, Number(e.target.value))} />
+  // Schwellen intern in kt / ft; Anzeige und Eingabe in den gewählten Einheiten
+  const [resetKey, setResetKey] = useState(0);
+  const un = settings.units;
+  const conv = {
+    speed: { f: un.speed === 'kmh' ? 1.852 : 1, unit: un.speed === 'kmh' ? 'km/h' : 'kt' },
+    alt: { f: un.alt === 'm' ? 0.3048 : 1, unit: un.alt === 'm' ? 'm' : 'ft' },
+    sec: { f: 1, unit: 's' },
+  } as const;
+  const num = (k: keyof typeof det, label: string, kind: keyof typeof conv, suffix = '') => (
+    <label key={`${k}-${conv[kind].unit}`}>
+      {label} ({conv[kind].unit}{suffix})
+      <input
+        type="number"
+        inputMode="numeric"
+        defaultValue={Math.round((det[k] as number) * conv[kind].f)}
+        onChange={(e) => e.target.value !== '' && setDet(k, Math.round((Number(e.target.value) / conv[kind].f) * 10) / 10)}
+      />
     </label>
   );
 
@@ -109,18 +123,18 @@ export default function SettingsView({
       <div className="card">
         <h2>Automatische Erkennung</h2>
         <p className="small muted" style={{ marginTop: 0 }}>
-          Schwellen an dein Luftfahrzeug anpassen. Startgeschwindigkeit etwas unter der Abhebegeschwindigkeit, Landeschwelle
-          deutlich darunter (Hysterese).
+          Schwellen an dein Luftfahrzeug anpassen – angezeigt in deinen Einheiten. Startgeschwindigkeit etwas unter der
+          Abhebegeschwindigkeit, Landeschwelle deutlich darunter (Hysterese).
         </p>
-        <div className="grid2">
-          {num('takeoffKt', 'Start ab', 'kt GS')}
-          {num('landingKt', 'Landung unter', 'kt GS')}
-          {num('fullStopKt', 'Full-Stop unter', 'kt')}
-          {num('touchdownAglFt', 'Aufsetzen unter', 'ft über Grund')}
-          {num('confirmSec', 'Bestätigung', 's')}
-          {num('flightEndSec', 'Flugende nach Stillstand', 's')}
+        <div className="grid2" key={resetKey}>
+          {num('takeoffKt', 'Start ab', 'speed', ' GS')}
+          {num('landingKt', 'Landung unter', 'speed', ' GS')}
+          {num('fullStopKt', 'Full-Stop unter', 'speed')}
+          {num('touchdownAglFt', 'Aufsetzen unter', 'alt', ' über Grund')}
+          {num('confirmSec', 'Bestätigung', 'sec')}
+          {num('flightEndSec', 'Flugende nach Stillstand', 'sec')}
         </div>
-        <button onClick={() => onChange({ ...settings, detector: { ...DEFAULT_SETTINGS } })}>Standardwerte</button>
+        <button onClick={() => { onChange({ ...settings, detector: { ...DEFAULT_SETTINGS } }); setResetKey((x) => x + 1); }}>Standardwerte</button>
       </div>
 
       <SimulatorCard recorder={recorder} settings={settings} onStarted={onOpenNav} />
