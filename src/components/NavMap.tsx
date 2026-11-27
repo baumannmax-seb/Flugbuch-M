@@ -47,10 +47,12 @@ export default function NavMap({ recorder, rec, settings, onSettings, onClose }:
   const u = settings.units;
   const unitsRef = useRef(u);
   unitsRef.current = u;
+  const showRef = useRef(settings.mapShow);
+  showRef.current = settings.mapShow;
   // Beschriftungen der Karte bei Einheitenwechsel neu zeichnen
   useEffect(() => {
     mapRef.current?.fire('moveend');
-  }, [u.alt, u.speed]);
+  }, [u.alt, u.speed, settings.mapShow.circuits, settings.mapShow.routes, settings.mapShow.rps]);
   const firstFix = useRef(false);
 
   // Position: aus laufender Aufzeichnung oder eigener GPS-Abfrage (Navi ohne Aufzeichnung)
@@ -127,6 +129,7 @@ export default function NavMap({ recorder, rec, settings, onSettings, onClose }:
           for (const p of getDetailsSync(f.icao)?.procs ?? []) {
             if (p.usage === 'HELICOPTER') continue;
             const circ = p.kind === 'circuit';
+            if (circ ? !showRef.current.circuits : !showRef.current.routes) continue;
             const style: L.PolylineOptions =
               p.kind === 'circuit'
                 ? { color: '#ffab00', weight: 3 }
@@ -149,7 +152,7 @@ export default function NavMap({ recorder, rec, settings, onSettings, onClose }:
         }
         // VFR-Meldepunkte (openflightmaps) ab Zoom 10
         if (z >= 10) {
-          for (const p of getDetailsSync(f.icao)?.rps ?? []) {
+          for (const p of showRef.current.rps ? getDetailsSync(f.icao)?.rps ?? [] : []) {
             L.marker([p.lat, p.lon], {
               interactive: false,
               icon: L.divIcon({
@@ -196,7 +199,7 @@ export default function NavMap({ recorder, rec, settings, onSettings, onClose }:
     let alive = true;
     (async () => {
       await loadDetails();
-      const icaos = await listFieldsWithCircuits();
+      const icaos = settings.mapShow.circuits ? await listFieldsWithCircuits() : [];
       const g = circuitLayerRef.current;
       if (!alive || !g) return;
       g.clearLayers();
@@ -221,7 +224,7 @@ export default function NavMap({ recorder, rec, settings, onSettings, onClose }:
     return () => {
       alive = false;
     };
-  }, [fieldsVer]);
+  }, [fieldsVer, settings.mapShow.circuits]);
 
   // Position / Track / Direct-To aktualisieren
   useEffect(() => {
@@ -322,6 +325,20 @@ export default function NavMap({ recorder, rec, settings, onSettings, onClose }:
         <button className={trackUp ? 'on' : ''} onClick={() => setTrackUp(!trackUp)} title="Track-Up / North-Up">{trackUp ? '⬆︎' : 'N'}</button>
         <button onClick={() => mapRef.current?.zoomIn()}>＋</button>
         <button onClick={() => mapRef.current?.zoomOut()}>－</button>
+        <button
+          className={settings.mapShow.circuits || settings.mapShow.routes ? 'on' : ''}
+          onClick={() => {
+            const on = !(settings.mapShow.circuits || settings.mapShow.routes);
+            onSettings({ ...settings, mapShow: { ...settings.mapShow, circuits: on, routes: on } });
+          }}
+          title="Platzrunden ein/aus"
+          aria-label="Platzrunden ein/aus"
+        >
+          <svg viewBox="0 0 32 32" width="26" height="26" aria-hidden>
+            <rect x="5" y="9" width="22" height="14" rx="5" fill="none" stroke="currentColor" strokeWidth="2" strokeDasharray={settings.mapShow.circuits || settings.mapShow.routes ? undefined : '3 3'} />
+            <path d="M9 16h14" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
+          </svg>
+        </button>
         <button onClick={() => setPickLayer(true)} title="Karten">🗺</button>
       </div>
 
@@ -365,6 +382,18 @@ export default function NavMap({ recorder, rec, settings, onSettings, onClose }:
             {baseSources(settings, mbt).map((b) => (
               <label key={b.id} className="check">
                 <input type="radio" checked={settings.mapLayer === b.id} onChange={() => onSettings({ ...settings, mapLayer: b.id })} /> {b.name}
+              </label>
+            ))}
+            <h2 className="small muted">ANZEIGE</h2>
+            {(
+              [
+                ['circuits', 'Platzrunden'],
+                ['routes', 'An-/Abflug- und Transitrouten'],
+                ['rps', 'VFR-Meldepunkte'],
+              ] as const
+            ).map(([k, label]) => (
+              <label key={k} className="check">
+                <input type="checkbox" checked={settings.mapShow[k]} onChange={(e) => onSettings({ ...settings, mapShow: { ...settings.mapShow, [k]: e.target.checked } })} /> {label}
               </label>
             ))}
             <h2 className="small muted">OVERLAYS</h2>

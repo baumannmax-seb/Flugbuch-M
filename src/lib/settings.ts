@@ -33,7 +33,16 @@ export interface AppSettings {
   theme: 'auto' | 'light' | 'dark';
   /** Anzeige-Einheiten */
   units: Units;
+  /** Was die Karte zeigt (im Navi über 🗺 umschaltbar) */
+  mapShow: MapShow;
 }
+
+export interface MapShow {
+  circuits: boolean; // Platzrunden (veröffentlicht + eigene schematische)
+  routes: boolean; // An-/Abflug-, Transit- und Warteverfahren
+  rps: boolean; // VFR-Meldepunkte
+}
+export const DEFAULT_MAP_SHOW: MapShow = { circuits: true, routes: true, rps: true };
 
 export const DEFAULT_APP_SETTINGS: AppSettings = {
   pilotName: '',
@@ -50,11 +59,12 @@ export const DEFAULT_APP_SETTINGS: AppSettings = {
   customName: '',
   theme: 'auto',
   units: { ...DEFAULT_UNITS },
+  mapShow: { circuits: true, routes: true, rps: true },
 };
 
 export async function loadSettings(): Promise<AppSettings> {
   const s = await db.get<AppSettings>('settings');
-  return { ...DEFAULT_APP_SETTINGS, ...s, detector: { ...DEFAULT_SETTINGS, ...(s?.detector ?? {}) }, units: { ...DEFAULT_UNITS, ...(s?.units ?? {}) } };
+  return { ...DEFAULT_APP_SETTINGS, ...s, detector: { ...DEFAULT_SETTINGS, ...(s?.detector ?? {}) }, units: { ...DEFAULT_UNITS, ...(s?.units ?? {}) }, mapShow: { ...DEFAULT_MAP_SHOW, ...(s?.mapShow ?? {}) } };
 }
 
 export function saveSettings(s: AppSettings) {

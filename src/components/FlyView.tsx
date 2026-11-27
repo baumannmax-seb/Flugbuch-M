@@ -91,16 +91,6 @@ export default function FlyView({ recorder, rec, settings, onSettings, onOpenNav
         )}
       </div>
 
-      <details className="section" style={{ borderTop: '1.5px solid var(--rule-soft)', marginTop: 6 }}>
-        <summary>So funktioniert die Erkennung</summary>
-        <div className="body">
-          <p style={{ marginTop: 0, lineHeight: 1.5 }}>
-            Vor dem Rollen starten und das Handy mit eingeschaltetem Bildschirm ablegen. Start, jede Landung, Touch-and-Go und Full-Stop werden aus
-            GPS-Geschwindigkeit und Höhe erkannt; Start- und Zielplatz kommen aus der Flugplatzdatenbank. {Math.round(settings.detector.flightEndSec / 60)} Minuten
-            Stillstand nach der letzten Landung beenden den Flug – er wird dann selbstständig ins Flugbuch eingetragen.
-          </p>
-        </div>
-      </details>
 
       <div className="fly-spacer" />
       <div className="fly-action">

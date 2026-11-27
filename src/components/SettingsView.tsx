@@ -122,9 +122,20 @@ export default function SettingsView({
 
       <div className="card">
         <h2>Automatische Erkennung</h2>
-        <p className="small muted" style={{ marginTop: 0 }}>
-          Schwellen an dein Luftfahrzeug anpassen – angezeigt in deinen Einheiten. Startgeschwindigkeit etwas unter der
-          Abhebegeschwindigkeit, Landeschwelle deutlich darunter (Hysterese).
+        <details className="section" style={{ borderBottom: 0, marginTop: -6 }}>
+          <summary className="small">So funktioniert die Erkennung</summary>
+          <div className="body small" style={{ lineHeight: 1.5 }}>
+            <p style={{ marginTop: 0 }}>
+              „Flug starten“ vor dem Rollen tippen und das Handy ablegen. Aus GPS-Geschwindigkeit und -Höhe erkennt die App Off-Block (erstes
+              Rollen), Start, jede Landung, Touch-and-Go (Aufsetzen und wieder Steigen), Full-Stop und On-Block. Start- und Zielplatz kommen aus
+              der Flugplatzdatenbank.
+            </p>
+            <p style={{ marginBottom: 0 }}>Nach der eingestellten Stillstandszeit nach der letzten Landung endet der Flug und wird selbstständig ins Flugbuch eingetragen.</p>
+          </div>
+        </details>
+        <p className="small muted" style={{ marginTop: 4 }}>
+          Schwellen an dein Luftfahrzeug anpassen – angezeigt in deinen Einheiten. Startgeschwindigkeit etwas unter der Abhebegeschwindigkeit,
+          Landeschwelle deutlich darunter (Hysterese).
         </p>
         <div className="grid2" key={resetKey}>
           {num('takeoffKt', 'Start ab', 'speed', ' GS')}
