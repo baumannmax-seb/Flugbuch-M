@@ -36,14 +36,15 @@ export default function FlyView({ recorder, rec, settings, onSettings, onOpenNav
         <p className="eyebrow rec" style={{ marginTop: 8 }}>
           <RecIcon size={18} spinning /> Aufzeichnung läuft {rec.source === 'sim' && '· Simulator'}
         </p>
-        <p className="serif" style={{ fontSize: 34, fontWeight: 700, margin: '0 0 6px' }}>{s ? PHASE_TXT[s.phase] : '–'}</p>
+        <p className="serif" style={{ fontSize: 34, fontWeight: 700, margin: '0 0 6px' }}>{s ? (s.takeoffPending ? 'Startlauf …' : PHASE_TXT[s.phase]) : '–'}</p>
         <div className="kpis">
           <div className="kpi"><div className="v">{fmtDuration(s?.airborneMs ?? 0)}</div><div className="l">Flugzeit</div></div>
           <div className="kpi"><div className="v">{s?.landings ?? 0}</div><div className="l">Landungen</div></div>
           <div className="kpi"><div className="v">{s?.touchAndGos ?? 0}</div><div className="l">Touch&Go</div></div>
         </div>
         <p className="small muted">
-          {rec.points.length} GPS-Punkte · Flug endet automatisch {Math.round(settings.detector.flightEndSec / 60)} min nach der letzten Landung im Stillstand.
+          {rec.points.length} GPS-Punkte
+          {s && s.rejectedTakeoffs > 0 && ` · ${s.rejectedTakeoffs}× Startlauf ohne Steigflug verworfen`} · Flug endet automatisch {Math.round(settings.detector.flightEndSec / 60)} min nach der letzten Landung im Stillstand.
         </p>
         {rec.error && <div className="err">{rec.error}</div>}
         <div className="fly-spacer" />

@@ -54,6 +54,10 @@ export interface DetectorSettings {
   movingKt: number;
   maxAccuracyM: number;
   touchdownAglFt: number;
+  /** Start erst bestätigen, wenn so hoch über Grund gestiegen (ft) – verhindert Fehlstarts durch Autofahrt / Startabbruch */
+  takeoffConfirmAglFt: number;
+  /** Zeitfenster für die Bestätigung (s) */
+  takeoffConfirmSec: number;
   /** Optional: Platzhöhe (ft) des nächsten Flugplatzes */
   fieldElevationFt?: (lat: number, lon: number) => number | null;
 }
@@ -69,10 +73,16 @@ export const DEFAULT_SETTINGS: DetectorSettings = {
   movingKt: 3, // Off-/On-Block-Erkennung
   maxAccuracyM: 100,
   touchdownAglFt: 30,
+  takeoffConfirmAglFt: 100,
+  takeoffConfirmSec: 90,
 };
 
 export interface DetectorSnapshot {
   phase: FlightPhase;
+  /** Startlauf erkannt, Bestätigung durch Steigen steht noch aus */
+  takeoffPending: boolean;
+  /** verworfene Starts (z.B. Autofahrt, Startabbruch) */
+  rejectedTakeoffs: number;
   events: FlightEvent[];
   firstMoveT: number | null; // "Off-Block"
   lastMoveT: number | null; // "On-Block"
@@ -149,8 +159,28 @@ export class FlightDetector {
 
     switch (this.phase) {
       case 'GROUND':
-        if (this.held(gs > s.takeoffKt, p)) this.takeoff();
-        else if (this.landingCount() > 0 && this.stillSince != null && p.t - this.stillSince >= s.flightEndSec * 1000) {
+        if (this.pending) {
+          // vorgemerkter Start: bestätigen, sobald wirklich gestiegen wird
+          const climbedEnough = this.aglFt != null && this.aglFt > s.takeoffConfirmAglFt;
+          if (climbedEnough && this.pendingMaxVs > 300) {
+            this.candidatePoint = this.pending.point;
+            this.pending = null;
+            this.takeoff();
+          } else if (gs < s.landingKt || p.t - this.pending.point.t > s.takeoffConfirmSec * 1000) {
+            // Startabbruch, langsamer geworden oder kein Steigflug (Autofahrt) → verwerfen
+            this.pending = null;
+            this.rejected++;
+            this.resetCandidate();
+          } else this.pendingMaxVs = Math.max(this.pendingMaxVs, this.vsFpm);
+        } else if (this.held(gs > s.takeoffKt, p)) {
+          // Ohne Höhendaten (oder ohne gelernte Bodenreferenz) wie bisher nur über die Geschwindigkeit
+          if (this.aglFt == null) this.takeoff();
+          else {
+            this.pending = { point: this.candidatePoint! };
+            this.pendingMaxVs = this.vsFpm;
+            this.resetCandidate();
+          }
+        } else if (this.landingCount() > 0 && this.stillSince != null && p.t - this.stillSince >= s.flightEndSec * 1000) {
           this.finished = true;
         }
         break;
@@ -234,6 +264,10 @@ export class FlightDetector {
     return p.t - this.candidateSince >= this.s.confirmSec * 1000;
   }
 
+  private pending: { point: GpsPoint } | null = null;
+  private pendingMaxVs = 0;
+  private rejected = 0;
+
   private takeoff() {
     const p = this.candidatePoint!;
     const e: FlightEvent = { type: 'takeoff', t: p.t, lat: p.lat, lon: p.lon };
@@ -293,6 +327,8 @@ export class FlightDetector {
     const t = now ?? this.last?.t ?? 0;
     return {
       phase: this.phase,
+      takeoffPending: !!this.pending,
+      rejectedTakeoffs: this.rejected,
       events: this.events.map((e) => ({ ...e })),
       firstMoveT: this.firstMoveT,
       lastMoveT: this.lastMoveT,

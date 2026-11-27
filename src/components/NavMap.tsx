@@ -346,7 +346,7 @@ export default function NavMap({ recorder, rec, settings, onSettings, onClose }:
 
       <div className="inst-bottom">
         {rec.active && snap ? (
-          <span className={`phase ${snap.phase}`}>{PHASE_TXT[snap.phase]}{rec.source === 'sim' && ' · SIM'}</span>
+          <span className={`phase ${snap.takeoffPending ? 'ROLLOUT' : snap.phase}`}>{snap.takeoffPending ? 'STARTLAUF' : PHASE_TXT[snap.phase]}{rec.source === 'sim' && ' · SIM'}</span>
         ) : (
           <span className="phase">{gpsErr ?? 'KEINE AUFZEICHNUNG'}</span>
         )}

@@ -127,7 +127,7 @@ export default function SettingsView({
           <div className="body small" style={{ lineHeight: 1.5 }}>
             <p style={{ marginTop: 0 }}>
               „Flug starten“ vor dem Rollen tippen und das Handy ablegen. Aus GPS-Geschwindigkeit und -Höhe erkennt die App Off-Block (erstes
-              Rollen), Start, jede Landung, Touch-and-Go (Aufsetzen und wieder Steigen), Full-Stop und On-Block. Start- und Zielplatz kommen aus
+              Rollen), Start (erst gezählt, wenn das Flugzeug wirklich steigt – Autofahrten und Startabbrüche werden verworfen), jede Landung, Touch-and-Go (Aufsetzen und wieder Steigen), Full-Stop und On-Block. Start- und Zielplatz kommen aus
               der Flugplatzdatenbank.
             </p>
             <p style={{ marginBottom: 0 }}>Nach der eingestellten Stillstandszeit nach der letzten Landung endet der Flug und wird selbstständig ins Flugbuch eingetragen.</p>
@@ -142,6 +142,8 @@ export default function SettingsView({
           {num('landingKt', 'Landung unter', 'speed', ' GS')}
           {num('fullStopKt', 'Full-Stop unter', 'speed')}
           {num('touchdownAglFt', 'Aufsetzen unter', 'alt', ' über Grund')}
+          {num('takeoffConfirmAglFt', 'Start bestätigt ab', 'alt', ' über Grund')}
+          {num('takeoffConfirmSec', 'Bestätigung innerhalb', 'sec')}
           {num('confirmSec', 'Bestätigung', 'sec')}
           {num('flightEndSec', 'Flugende nach Stillstand', 'sec')}
         </div>
