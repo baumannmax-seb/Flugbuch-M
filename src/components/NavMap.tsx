@@ -14,6 +14,7 @@ import { listMbtiles, type MbtilesMeta } from '../lib/mbtiles';
 import AirfieldSearch from './AirfieldSearch';
 import AirfieldSheet from './AirfieldSheet';
 import { keepScreenOn, watchLocation } from '../lib/native';
+import { altLabel, altUnit, altVal, distText, speedUnit, speedVal, vsText } from '../lib/units';
 import { circuitPath, effectiveCircuit, getDetailsSync, getFieldData, listFieldsWithCircuits, loadDetails, runwayEnds } from '../lib/airfieldDetails';
 
 const PHASE_TXT = { GROUND: 'AM BODEN', AIRBORNE: 'IN DER LUFT', ROLLOUT: 'AUSROLLEN' } as const;
@@ -43,6 +44,13 @@ export default function NavMap({ recorder, rec, settings, onSettings, onClose }:
   const [ownPos, setOwnPos] = useState<GpsPoint | null>(null);
   const [gpsErr, setGpsErr] = useState<string | null>(null);
   const lastTrack = useRef(0);
+  const u = settings.units;
+  const unitsRef = useRef(u);
+  unitsRef.current = u;
+  // Beschriftungen der Karte bei Einheitenwechsel neu zeichnen
+  useEffect(() => {
+    mapRef.current?.fire('moveend');
+  }, [u.alt, u.speed]);
   const firstFix = useRef(false);
 
   // Position: aus laufender Aufzeichnung oder eigener GPS-Abfrage (Navi ohne Aufzeichnung)
@@ -130,7 +138,8 @@ export default function NavMap({ recorder, rec, settings, onSettings, onClose }:
             L.polyline(p.coords, { ...style, opacity: 0.95, interactive: false }).addTo(g);
             if ((circ && z >= 11) || z >= 13) {
               const mid = p.coords[Math.floor(p.coords.length / 2)];
-              const label = circ ? `${f.icao} ${p.name}${p.rwys?.length ? ' (' + p.rwys.join('/') + ')' : ''}${p.alt ? ' · ' + p.alt : ''}` : `${p.name}${p.alt ? ' · ' + p.alt : ''}`;
+              const alt = p.alt ? ' · ' + altLabel(p.alt, unitsRef.current) : '';
+              const label = circ ? `${f.icao} ${p.name}${p.rwys?.length ? ' (' + p.rwys.join('/') + ')' : ''}${alt}` : `${p.name}${alt}`;
               L.marker(mid, {
                 interactive: false,
                 icon: L.divIcon({ className: circ ? 'circuit-label' : 'circuit-label route', html: label, iconSize: [200, 20], iconAnchor: [100, 10] }),
@@ -289,15 +298,22 @@ export default function NavMap({ recorder, rec, settings, onSettings, onClose }:
       </div>
 
       <div className="inst-top">
-        <div className="inst"><div className="l">GS</div><div className="v">{Math.round(gsKt)}<span className="u">kt</span></div></div>
-        <div className="inst"><div className="l">ALT (GPS)</div><div className="v">{altFt != null ? Math.round(altFt / 10) * 10 : '–'}<span className="u">ft</span></div></div>
-        <div className="inst"><div className="l">VS</div><div className="v">{rec.active ? (vs > 0 ? '+' : '') + Math.round(vs / 50) * 50 : '–'}<span className="u">fpm</span></div></div>
+        {/* Antippen schaltet die Einheit um (kt ↔ km/h, ft ↔ m) */}
+        <button className="inst" onClick={() => onSettings({ ...settings, units: { ...u, speed: u.speed === 'kt' ? 'kmh' : 'kt' } })}>
+          <div className="l">GS</div>
+          <div className="v">{Math.round(speedVal(gsKt, u))}<span className="u">{speedUnit(u)}</span></div>
+        </button>
+        <button className="inst" onClick={() => onSettings({ ...settings, units: { ...u, alt: u.alt === 'ft' ? 'm' : 'ft' } })}>
+          <div className="l">ALT (GPS)</div>
+          <div className="v">{altFt != null ? (u.alt === 'm' ? Math.round(altVal(altFt, u)) : Math.round(altFt / 10) * 10) : '–'}<span className="u">{altUnit(u)}</span></div>
+        </button>
+        <div className="inst"><div className="l">VS</div><div className="v">{rec.active ? vsText(vs, u).v : '–'}<span className="u">{vsText(vs, u).unit}</span></div></div>
         <div className="inst"><div className="l">TRK</div><div className="v">{gsKt > 3 ? pad3(trk) : '–'}<span className="u">°</span></div></div>
       </div>
 
       {dtoInfo && dto && (
         <div className="dto-panel">
-          <b>→ {dto.icao}</b> {pad3(dtoInfo.b)}° · {(dtoInfo.d / NM_IN_M).toFixed(1)} NM{dtoInfo.ete != null && <> · ETE {fmtDuration(dtoInfo.ete)}</>}
+          <b>→ {dto.icao}</b> {pad3(dtoInfo.b)}° · {distText(dtoInfo.d, u)}{dtoInfo.ete != null && <> · ETE {fmtDuration(dtoInfo.ete)}</>}
         </div>
       )}
 
@@ -326,7 +342,7 @@ export default function NavMap({ recorder, rec, settings, onSettings, onClose }:
           )}
           {near && (
             <div className="muted">
-              Nächster: <b style={{ color: 'var(--text)' }}>{near.field.icao}</b> {pad3(bearing(pos!.lat, pos!.lon, near.field.lat, near.field.lon))}° {(near.dist / NM_IN_M).toFixed(1)} NM
+              Nächster: <b style={{ color: 'var(--text)' }}>{near.field.icao}</b> {pad3(bearing(pos!.lat, pos!.lon, near.field.lat, near.field.lon))}° {distText(near.dist, u)}
             </div>
           )}
         </div>
@@ -370,6 +386,7 @@ export default function NavMap({ recorder, rec, settings, onSettings, onClose }:
         <AirfieldSheet
           field={selField}
           openAipKey={settings.openAipKey}
+          units={u}
           pos={pos}
           onClose={() => setSelField(null)}
           onDirectTo={(f) => {

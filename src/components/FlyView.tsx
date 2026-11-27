@@ -7,6 +7,7 @@ import InstructorPicker from './InstructorPicker';
 import AircraftArt from './AircraftArt';
 import RecIcon from './RecIcon';
 import Hangar from './Hangar';
+import AddAircraftSheet from './AddAircraftSheet';
 
 const PHASE_TXT = { GROUND: 'Am Boden', AIRBORNE: 'In der Luft', ROLLOUT: 'Ausrollen' } as const;
 
@@ -14,9 +15,10 @@ const PHASE_TXT = { GROUND: 'Am Boden', AIRBORNE: 'In der Luft', ROLLOUT: 'Ausro
  * Fliegen: Luftfahrzeug und Besatzung oben, GPS-Status und die Hauptaktion
  * unten direkt über der Tab-Leiste (mit dem Daumen erreichbar, auch mit Handschuh).
  */
-export default function FlyView({ recorder, rec, settings, onOpenNav, onShowLog, onAddAircraft }: { recorder: Recorder; rec: RecorderState; settings: AppSettings; onOpenNav: () => void; onShowLog: () => void; onAddAircraft: () => void }) {
+export default function FlyView({ recorder, rec, settings, onSettings, onOpenNav, onShowLog }: { recorder: Recorder; rec: RecorderState; settings: AppSettings; onSettings: (s: AppSettings) => void; onOpenNav: () => void; onShowLog: () => void }) {
   const [reg, setReg] = useState(recorder.aircraftReg || settings.defaultAircraft || settings.aircraft[0]?.reg || '');
   const [crew, setCrew] = useState({ ...recorder.crew, instructor: recorder.crew.instructor || settings.defaultInstructor });
+  const [adding, setAdding] = useState(false);
   const gps = useGpsStatus(!rec.active);
   const gpsInfo = GpsStatusText(gps);
 
@@ -69,7 +71,7 @@ export default function FlyView({ recorder, rec, settings, onOpenNav, onShowLog,
       {rec.snap && !rec.savedEntryId && rec.snap.takeoffs === 0 && <div className="err">Letzte Aufzeichnung enthielt keinen Start – kein Eintrag angelegt.</div>}
 
       <p className="eyebrow" style={{ marginTop: 8 }}>Luftfahrzeug</p>
-      <Hangar aircraft={settings.aircraft} value={reg} onChange={setReg} onAdd={onAddAircraft} />
+      <Hangar aircraft={settings.aircraft} value={reg} onChange={setReg} onAdd={() => setAdding(true)} />
 
       <div className="grid2" style={{ marginTop: 14 }}>
         <label>
@@ -97,7 +99,6 @@ export default function FlyView({ recorder, rec, settings, onOpenNav, onShowLog,
             GPS-Geschwindigkeit und Höhe erkannt; Start- und Zielplatz kommen aus der Flugplatzdatenbank. {Math.round(settings.detector.flightEndSec / 60)} Minuten
             Stillstand nach der letzten Landung beenden den Flug – er wird dann selbstständig ins Flugbuch eingetragen.
           </p>
-          <button className="link" onClick={onOpenNav}>Karte ohne Aufzeichnung öffnen</button>
         </div>
       </details>
 
@@ -109,9 +110,20 @@ export default function FlyView({ recorder, rec, settings, onOpenNav, onShowLog,
         </div>
         <button className="primary action-btn" onClick={startGps}>
           <RecIcon size={34} />
-          Aufzeichnung starten
+          Flug starten
         </button>
+        <button className="link map-only" onClick={onOpenNav}>Nur Karte ansehen – ohne Aufzeichnung</button>
       </div>
+      {adding && (
+        <AddAircraftSheet
+          onClose={() => setAdding(false)}
+          onAdd={(a) => {
+            onSettings({ ...settings, aircraft: [...settings.aircraft.filter((x) => x.reg !== a.reg), a], defaultAircraft: settings.defaultAircraft || a.reg });
+            setReg(a.reg);
+            setAdding(false);
+          }}
+        />
+      )}
     </div>
   );
 }

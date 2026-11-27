@@ -72,6 +72,27 @@ export default function SettingsView({
       </div>
 
       <div className="card">
+        <h2>Einheiten</h2>
+        <div className="row" style={{ alignItems: 'flex-start' }}>
+          <div>
+            <div className="small muted" style={{ marginBottom: 6 }}>Geschwindigkeit / Distanz</div>
+            <div className="chips">
+              <button className={settings.units.speed === 'kt' ? 'on' : ''} onClick={() => onChange({ ...settings, units: { ...settings.units, speed: 'kt' } })}>kt · NM</button>
+              <button className={settings.units.speed === 'kmh' ? 'on' : ''} onClick={() => onChange({ ...settings, units: { ...settings.units, speed: 'kmh' } })}>km/h · km</button>
+            </div>
+          </div>
+          <div>
+            <div className="small muted" style={{ marginBottom: 6 }}>Höhe / Steigen</div>
+            <div className="chips">
+              <button className={settings.units.alt === 'ft' ? 'on' : ''} onClick={() => onChange({ ...settings, units: { ...settings.units, alt: 'ft' } })}>ft · fpm</button>
+              <button className={settings.units.alt === 'm' ? 'on' : ''} onClick={() => onChange({ ...settings, units: { ...settings.units, alt: 'm' } })}>m · m/s</button>
+            </div>
+          </div>
+        </div>
+        <p className="small muted" style={{ marginBottom: 0 }}>Im Navi kannst du auch direkt auf GS bzw. ALT tippen, um umzuschalten.</p>
+      </div>
+
+      <div className="card">
         <h2>Pilot</h2>
         <label>
           Name (wird als PIC eingetragen)

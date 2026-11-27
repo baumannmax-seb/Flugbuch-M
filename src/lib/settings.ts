@@ -1,5 +1,6 @@
 import { db } from './db';
 import { DEFAULT_SETTINGS, type DetectorSettings } from './flightDetector';
+import { DEFAULT_UNITS, type Units } from './units';
 
 export interface AircraftCfg {
   reg: string;
@@ -30,6 +31,8 @@ export interface AppSettings {
   customName: string;
   /** Darstellung: 'auto' folgt dem System */
   theme: 'auto' | 'light' | 'dark';
+  /** Anzeige-Einheiten */
+  units: Units;
 }
 
 export const DEFAULT_APP_SETTINGS: AppSettings = {
@@ -46,11 +49,12 @@ export const DEFAULT_APP_SETTINGS: AppSettings = {
   customUrl: '',
   customName: '',
   theme: 'auto',
+  units: { ...DEFAULT_UNITS },
 };
 
 export async function loadSettings(): Promise<AppSettings> {
   const s = await db.get<AppSettings>('settings');
-  return { ...DEFAULT_APP_SETTINGS, ...s, detector: { ...DEFAULT_SETTINGS, ...(s?.detector ?? {}) } };
+  return { ...DEFAULT_APP_SETTINGS, ...s, detector: { ...DEFAULT_SETTINGS, ...(s?.detector ?? {}) }, units: { ...DEFAULT_UNITS, ...(s?.units ?? {}) } };
 }
 
 export function saveSettings(s: AppSettings) {

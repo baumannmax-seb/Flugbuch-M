@@ -5,6 +5,7 @@ import { exportCsv } from '../lib/export';
 import type { AppSettings } from '../lib/settings';
 import EntryForm, { emptyEntry } from './EntryForm';
 import CsvImportSheet from './CsvImportSheet';
+import TrackImportSheet from './TrackImportSheet';
 import RecIcon from './RecIcon';
 import AircraftArt, { defaultAircraft } from './AircraftArt';
 
@@ -43,6 +44,7 @@ export default function Logbook({
   const [edit, setEdit] = useState<{ entry: LogEntry; isNew: boolean } | null>(null);
   const [q, setQ] = useState('');
   const [importing, setImporting] = useState(false);
+  const [trackImport, setTrackImport] = useState(false);
 
   const totalMin = entries.reduce((s, e) => s + e.flightMin, 0);
   const totalLdg = entries.reduce((s, e) => s + e.landings, 0);
@@ -73,7 +75,7 @@ export default function Logbook({
           <p>Starte eine GPS-Aufzeichnung – Start, Landungen und Touch-and-Gos werden automatisch erkannt und hier eingetragen.</p>
           <button className="primary big" onClick={onRecord}>
             <RecIcon size={34} />
-            Flug aufzeichnen
+            Flug starten
           </button>
           <div className="hero-links" style={{ marginTop: 14, display: 'flex', gap: 28, justifyContent: 'center' }}>
             <button className="link" onClick={newEntry}>Manuell eintragen</button>
@@ -127,11 +129,21 @@ export default function Logbook({
             </div>
             <div className="menu-list">
               <button onClick={() => { onMenuClose(); newEntry(); }}>＋ Flug manuell eintragen</button>
-              <button onClick={() => { onMenuClose(); setImporting(true); }}>⬇︎ Importieren (CSV aus b4takeoff, Excel …)</button>
+              <button onClick={() => { onMenuClose(); setImporting(true); }}>⬇︎ Flugbuch importieren (CSV aus b4takeoff, Excel …)</button>
+              <button onClick={() => { onMenuClose(); setTrackImport(true); }}>🛰 GPS-Track importieren (Flightradar24, GPX, KML, IGC)</button>
               <button disabled={!entries.length} onClick={() => { onMenuClose(); exportCsv(entries); }}>⬆︎ Exportieren als CSV</button>
             </div>
           </div>
         </div>
+      )}
+      {trackImport && (
+        <TrackImportSheet
+          settings={settings}
+          onClose={(imported) => {
+            setTrackImport(false);
+            if (imported) onChange();
+          }}
+        />
       )}
       {importing && (
         <CsvImportSheet

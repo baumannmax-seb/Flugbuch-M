@@ -16,6 +16,7 @@ import {
 } from '../lib/airfieldDetails';
 import { bearing, distance, NM_IN_M, pad3 } from '../lib/geo';
 import { loadOaipAirport } from '../lib/openaipApi';
+import { altLabel, altUnit, altVal, DEFAULT_UNITS, distText, type Units } from '../lib/units';
 
 /** Detailansicht eines Flugplatzes (öffnet sich beim Tippen auf einen Platz in der Karte) */
 export default function AirfieldSheet({
@@ -25,7 +26,9 @@ export default function AirfieldSheet({
   onDirectTo,
   onChanged,
   openAipKey = '',
+  units = DEFAULT_UNITS,
 }: {
+  units?: Units;
   openAipKey?: string;
   field: Airfield;
   pos: { lat: number; lon: number } | null;
@@ -93,11 +96,11 @@ export default function AirfieldSheet({
         </div>
 
         <div className="row" style={{ marginBottom: 12 }}>
-          <div className="kpi"><div className="v">{field.elevFt}</div><div className="l">ft Platzhöhe</div></div>
+          <div className="kpi"><div className="v">{Math.round(altVal(field.elevFt, units))}</div><div className="l">{altUnit(units)} Platzhöhe</div></div>
           {pos && (
             <div className="kpi">
-              <div className="v">{(distance(pos.lat, pos.lon, field.lat, field.lon) / NM_IN_M).toFixed(1)}</div>
-              <div className="l">NM · {pad3(bearing(pos.lat, pos.lon, field.lat, field.lon))}°</div>
+              <div className="v">{distText(distance(pos.lat, pos.lon, field.lat, field.lon), units).split(' ')[0]}</div>
+              <div className="l">{distText(0, units).split(' ')[1]} · {pad3(bearing(pos.lat, pos.lon, field.lat, field.lon))}°</div>
             </div>
           )}
         </div>
@@ -145,7 +148,7 @@ export default function AirfieldSheet({
                     <b style={{ fontSize: 16 }}>{{ circuit: 'Platzrunde', arrival: 'Anflug', departure: 'Abflug', transit: 'Transit', hold: 'Warten', other: p.codeType }[p.kind]}</b> {p.name}
                     {p.rwys && p.rwys.length > 0 && <span className="muted"> · Piste {p.rwys.join('/')}</span>}
                   </div>
-                  <span style={{ flex: '0 0 auto' }}>{p.alt}</span>
+                  <span style={{ flex: '0 0 auto' }}>{altLabel(p.alt, units)}</span>
                 </div>
               ))}
             <p className="small muted" style={{ marginBottom: 0 }}>Auf der Karte: Platzrunde orange, An-/Abflug violett gestrichelt, Transit lila gepunktet.</p>

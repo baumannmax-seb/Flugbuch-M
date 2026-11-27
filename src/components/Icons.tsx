@@ -1,11 +1,27 @@
 // Linien-Icons im Stil des Designs (Strichstärke 1.6, Tannengrün)
 const P = { fill: 'none', stroke: 'currentColor', strokeWidth: 1.6, strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const };
 
-export const BrandMark = () => (
-  <svg viewBox="0 0 46 24" aria-hidden>
-    {/* stilisierte Platzrunde: abgerundetes Rechteck mit Position */}
-    <path d="M8 21h26c2.5 0 4.3-1.4 5-3.6l2.6-9C42.4 5.6 40.9 3 38 3H12C9.6 3 7.7 4.4 7 6.6L3.6 17.4C2.9 19.4 5.4 21 8 21z" {...P} strokeWidth={1.8} />
-    <circle cx="42" cy="4" r="2.2" fill="currentColor" />
+/** App-Zeichen: Propellerflugzeug im Steigflug mit Spur ab rotem Punkt (wie das App-Icon) */
+export const BrandMark = ({ size = 40 }: { size?: number }) => (
+  <svg viewBox="0 0 512 512" width={size} height={size} aria-hidden style={{ flex: '0 0 auto' }}>
+    <rect width="512" height="512" rx="112" fill="#1c4535" />
+    <path d="M134 388 C 214 380, 278 336, 296 248" fill="none" stroke="#f6efe4" strokeWidth="15" strokeLinecap="round" />
+    <circle cx="118" cy="392" r="27" fill="#c63d24" />
+    <g transform="translate(352 178) rotate(42)" fill="#f6efe4">
+      <rect x="-13" y="-74" width="26" height="160" rx="13" />
+      <path d="M-100 -24 Q-100 -34 -90 -34 L90 -34 Q100 -34 100 -24 L100 -4 Q100 6 90 5 L-90 5 Q-100 6 -100 -4 Z" />
+      <rect x="-44" y="62" width="88" height="24" rx="9" />
+      <circle cx="0" cy="-76" r="10" />
+      <rect x="-34" y="-90" width="68" height="9" rx="4.5" />
+    </g>
+  </svg>
+);
+
+/** Start: Haus */
+export const IconHome = () => (
+  <svg viewBox="0 0 32 32" aria-hidden>
+    <path d="M5 14.5 16 5l11 9.5" {...P} />
+    <path d="M8 12.5V27h6v-7h4v7h6V12.5" {...P} />
   </svg>
 );
 

@@ -449,3 +449,32 @@ button.big { display: flex; align-items: center; justify-content: center; gap: 1
 
 /* Flug-Detail ohne GPS-Spur: Flugzeug als Kopfbild */
 .entry-art { padding: 6px 0 10px; border-bottom: 1.5px solid var(--rule-soft); margin-bottom: 12px; }
+/* Instrumente sind antippbar (Einheit umschalten) */
+button.inst { background: none; border: 0; border-radius: 0; color: inherit; font: inherit; cursor: pointer; }
+.hangar-add { width: 100%; aspect-ratio: 3.2 / 1; max-width: 520px; margin: 0 auto; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; border: 1.5px dashed var(--rule-soft); border-radius: 16px; font-size: 17px; }
+.hangar-add .plus { font-size: 34px; line-height: 1; }
+.hangar-dots .dot-plus { font-size: 15px; color: var(--muted); }
+.hangar-dots .dot-plus::after { display: none; }
+.map-only { align-self: center; font-size: 15px; padding: 2px 0 0; }
+
+/* ---------- Startbildschirm ---------- */
+.header h1.home-title { display: flex; align-items: center; gap: 14px; }
+.home-art { margin: 2px 0 6px; }
+.home-art .ac-art { max-width: 460px; }
+.home-facts { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 6px; }
+.fact { display: flex; gap: 8px; align-items: flex-start; border: 1.5px solid var(--rule-soft); border-radius: 12px; padding: 9px 10px; font-size: 13px; }
+.fact b { display: block; font-family: var(--serif); font-size: 17px; }
+.fact span { color: var(--muted); }
+.fact .dot { flex: 0 0 auto; width: 9px; height: 9px; border-radius: 50%; margin-top: 7px; background: var(--muted); }
+.fact.ok .dot { background: var(--ok); }
+.fact.warn .dot { background: var(--warn); }
+.fact.bad .dot { background: var(--red); }
+.entry.compact { padding: 10px 0; }
+.entry.compact .route, .entry.compact .time { font-size: 18px; }
+/* fünf Tabs auf dem iPhone */
+@media (max-width: 699px) {
+  .tabbar { margin: 0 4px; }
+  .tabbar button { font-size: 11.5px; padding: 9px 0 7px; }
+  .tabbar button svg { width: 27px; height: 27px; }
+}
+@media (min-width: 1000px) { .header h1.home-title svg { display: none; } }

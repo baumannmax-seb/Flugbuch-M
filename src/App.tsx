@@ -10,12 +10,15 @@ import Stats from './components/Stats';
 import SettingsView from './components/SettingsView';
 import NavMap from './components/NavMap';
 import RecIcon from './components/RecIcon';
-import { BrandMark, IconBook, IconPlane, IconSliders, IconStats } from './components/Icons';
+import Home from './components/Home';
+import EntryForm from './components/EntryForm';
+import { BrandMark, IconHome, IconBook, IconPlane, IconSliders, IconStats } from './components/Icons';
 
-type Tab = 'log' | 'fly' | 'stats' | 'settings';
+type Tab = 'home' | 'log' | 'fly' | 'stats' | 'settings';
 
 export default function App() {
-  const [tab, setTab] = useState<Tab>('log');
+  const [tab, setTab] = useState<Tab>('home');
+  const [editEntry, setEditEntry] = useState<LogEntry | null>(null);
   const [entries, setEntries] = useState<LogEntry[]>([]);
   const [settings, setSettings] = useState<AppSettings>(DEFAULT_APP_SETTINGS);
   const [ready, setReady] = useState(false);
@@ -70,13 +73,19 @@ export default function App() {
 
   return (
     <div className="app">
-      {/* Marke nur im Flugbuch (auf breiten Bildschirmen immer, dort ist sie Teil der Seitenleiste) */}
-      <div className={`brand ${tab !== 'log' ? 'brand-optional' : ''}`}>
-        <BrandMark />
+      {/* Marke nur in der Seitenleiste breiter Bildschirme; auf dem iPhone trägt der Startbildschirm das Zeichen */}
+      <div className="brand brand-optional">
+        <BrandMark size={34} />
         Platzrunde
       </div>
       <div className="header">
-        <h1>
+        <h1 className={tab === 'home' ? 'home-title' : ''}>
+          {tab === 'home' && (
+            <>
+              <BrandMark size={46} />
+              Platzrunde
+            </>
+          )}
           {tab === 'log' && 'Flugbuch'}
           {tab === 'fly' && 'Fliegen'}
           {tab === 'stats' && 'Auswertung'}
@@ -85,7 +94,7 @@ export default function App() {
         <div className="header-actions">
           {rec.active && (
             <button className="rec-pill" onClick={() => setNavOpen(true)}>
-              <RecIcon size={18} spinning /> Aufzeichnung
+              <RecIcon size={18} spinning /> Flug läuft
             </button>
           )}
           {tab === 'log' && (
@@ -94,16 +103,29 @@ export default function App() {
         </div>
       </div>
       <div className="content">
+        {tab === 'home' && (
+          <Home
+            entries={entries}
+            settings={settings}
+            rec={rec}
+            onStartFlight={() => setTab('fly')}
+            onOpenLog={() => setTab('log')}
+            onOpenEntry={setEditEntry}
+            onOpenMap={() => setNavOpen(true)}
+            onOpenNav={() => setNavOpen(true)}
+          />
+        )}
         {tab === 'log' && (
           <Logbook entries={entries} settings={settings} onChange={reloadEntries} menuOpen={logMenu} onMenuClose={() => setLogMenu(false)} onRecord={() => setTab('fly')} />
         )}
-        {tab === 'fly' && <FlyView recorder={recorder} rec={rec} settings={settings} onOpenNav={() => setNavOpen(true)} onShowLog={() => setTab('log')} onAddAircraft={() => setTab('settings')} />}
+        {tab === 'fly' && <FlyView recorder={recorder} rec={rec} settings={settings} onSettings={updateSettings} onOpenNav={() => setNavOpen(true)} onShowLog={() => setTab('log')} />}
         {tab === 'stats' && <Stats entries={entries} settings={settings} />}
         {tab === 'settings' && <SettingsView settings={settings} onChange={updateSettings} onDataChanged={reloadEntries} recorder={recorder} onOpenNav={() => setNavOpen(true)} />}
       </div>
       <nav className="tabbar">
         {(
           [
+            ['home', <IconHome key="h" />, 'Start'],
             ['log', <IconBook key="b" />, 'Flugbuch'],
             ['fly', <IconPlane key="p" />, 'Fliegen'],
             ['stats', <IconStats key="s" />, 'Auswertung'],
@@ -116,6 +138,16 @@ export default function App() {
           </button>
         ))}
       </nav>
+      {editEntry && (
+        <EntryForm
+          initial={editEntry}
+          settings={settings}
+          onClose={(changed) => {
+            setEditEntry(null);
+            if (changed) reloadEntries();
+          }}
+        />
+      )}
       {navOpen && <NavMap recorder={recorder} rec={rec} settings={settings} onSettings={updateSettings} onClose={() => setNavOpen(false)} />}
     </div>
   );

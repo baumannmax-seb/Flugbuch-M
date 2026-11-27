@@ -20,7 +20,7 @@ export default function Hangar({ aircraft, value, onChange, onAdd }: { aircraft:
   const onScroll = () => {
     const el = ref.current;
     if (!el) return;
-    const i = Math.round(el.scrollLeft / el.clientWidth);
+    const i = Math.min(Math.round(el.scrollLeft / el.clientWidth), aircraft.length - 1);
     const a = aircraft[i];
     if (a && a.reg !== value) onChange(a.reg);
   };
@@ -48,12 +48,20 @@ export default function Hangar({ aircraft, value, onChange, onAdd }: { aircraft:
             </div>
           </div>
         ))}
+        {/* letzte Karte: neues Luftfahrzeug direkt hier anlegen */}
+        <div className="hangar-card">
+          <button className="hangar-add" onClick={onAdd}>
+            <span className="plus">＋</span>
+            <span>Neues Luftfahrzeug</span>
+          </button>
+        </div>
       </div>
-      {aircraft.length > 1 && (
+      {aircraft.length > 0 && (
         <div className="hangar-dots" role="tablist" aria-label="Luftfahrzeug wählen">
           {aircraft.map((a, i) => (
             <button key={a.reg} className={i === idx ? 'on' : ''} aria-label={a.reg} onClick={() => goTo(i)} />
           ))}
+          <button className="dot-plus" aria-label="Neues Luftfahrzeug" onClick={() => goTo(aircraft.length)}>＋</button>
         </div>
       )}
     </div>
