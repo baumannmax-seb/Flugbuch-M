@@ -51,10 +51,17 @@ export async function watchLocation(onPoint: (p: GpsPoint) => void, onError: (ms
     onError('Kein GPS verfügbar', false);
     return () => {};
   }
+  const toPoint = (pos: GeolocationPosition): GpsPoint => {
+    const c = pos.coords;
+    return { t: pos.timestamp, lat: c.latitude, lon: c.longitude, alt: c.altitude, speed: c.speed, track: c.heading != null && !isNaN(c.heading) ? c.heading : null, acc: c.accuracy };
+  };
+  // sofort die letzte bekannte Position liefern (Anzeige startet nicht leer), danach laufende Updates
+  let gotWatch = false;
+  navigator.geolocation.getCurrentPosition((pos) => !gotWatch && onPoint(toPoint(pos)), () => {}, { enableHighAccuracy: true, maximumAge: 15000, timeout: 10000 });
   const id = navigator.geolocation.watchPosition(
     (pos) => {
-      const c = pos.coords;
-      onPoint({ t: pos.timestamp, lat: c.latitude, lon: c.longitude, alt: c.altitude, speed: c.speed, track: c.heading != null && !isNaN(c.heading) ? c.heading : null, acc: c.accuracy });
+      gotWatch = true;
+      onPoint(toPoint(pos));
     },
     (err) => onError(err.code === 1 ? 'Standortzugriff verweigert – bitte in den Einstellungen erlauben.' : `GPS-Fehler: ${err.message}`, err.code === 1),
     { enableHighAccuracy: true, maximumAge: 0, timeout: 30000 }

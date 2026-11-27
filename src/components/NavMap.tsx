@@ -13,7 +13,7 @@ import { applyLayers, baseSources, overlaySources } from './tiles';
 import { listMbtiles, type MbtilesMeta } from '../lib/mbtiles';
 import AirfieldSearch from './AirfieldSearch';
 import AirfieldSheet from './AirfieldSheet';
-import { keepScreenOn } from '../lib/native';
+import { keepScreenOn, watchLocation } from '../lib/native';
 import { circuitPath, effectiveCircuit, getDetailsSync, getFieldData, listFieldsWithCircuits, loadDetails, runwayEnds } from '../lib/airfieldDetails';
 
 const PHASE_TXT = { GROUND: 'AM BODEN', AIRBORNE: 'IN DER LUFT', ROLLOUT: 'AUSROLLEN' } as const;
@@ -47,16 +47,20 @@ export default function NavMap({ recorder, rec, settings, onSettings, onClose }:
 
   // Position: aus laufender Aufzeichnung oder eigener GPS-Abfrage (Navi ohne Aufzeichnung)
   useEffect(() => {
-    if (rec.active || !('geolocation' in navigator)) return;
-    const id = navigator.geolocation.watchPosition(
+    if (rec.active) return;
+    let stop: (() => void) | null = null;
+    let alive = true;
+    watchLocation(
       (p) => {
         setGpsErr(null);
-        setOwnPos({ t: p.timestamp, lat: p.coords.latitude, lon: p.coords.longitude, alt: p.coords.altitude, speed: p.coords.speed, track: p.coords.heading, acc: p.coords.accuracy });
+        setOwnPos(p);
       },
-      (e) => setGpsErr(e.code === 1 ? 'Standortzugriff verweigert' : 'Kein GPS-Signal'),
-      { enableHighAccuracy: true, maximumAge: 0, timeout: 30000 }
-    );
-    return () => navigator.geolocation.clearWatch(id);
+      (_msg, denied) => setGpsErr(denied ? 'Standortzugriff verweigert' : 'Kein GPS-Signal')
+    ).then((f) => (alive ? (stop = f) : f()));
+    return () => {
+      alive = false;
+      stop?.();
+    };
   }, [rec.active]);
 
   const pos = rec.active ? rec.last : ownPos ?? rec.last;

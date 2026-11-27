@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { watchLocation } from './native';
 
 export type GpsState =
   | { kind: 'searching' }
@@ -12,20 +13,21 @@ export function useGpsStatus(enabled: boolean): GpsState {
   const [s, setS] = useState<GpsState>({ kind: 'searching' });
   useEffect(() => {
     if (!enabled) return;
-    if (!('geolocation' in navigator)) {
-      setS({ kind: 'unavailable', msg: 'Kein GPS auf diesem Gerät' });
-      return;
-    }
     setS({ kind: 'searching' });
-    const id = navigator.geolocation.watchPosition(
+    // über die gemeinsame Ortungs-Schicht: nativ = iOS-Ortung (kein „localhost“-Dialog), sonst Browser
+    let stop: (() => void) | null = null;
+    let alive = true;
+    watchLocation(
       (p) => {
-        const acc = Math.round(p.coords.accuracy);
+        const acc = Math.round(p.acc ?? 999);
         setS(acc <= 25 ? { kind: 'ready', acc } : { kind: 'weak', acc });
       },
-      (e) => setS(e.code === 1 ? { kind: 'denied' } : { kind: 'searching' }),
-      { enableHighAccuracy: true, maximumAge: 0, timeout: 30000 }
-    );
-    return () => navigator.geolocation.clearWatch(id);
+      (msg, denied) => setS(denied ? { kind: 'denied' } : msg === 'Kein GPS verfügbar' ? { kind: 'unavailable', msg: 'Kein GPS auf diesem Gerät' } : { kind: 'searching' })
+    ).then((f) => (alive ? (stop = f) : f()));
+    return () => {
+      alive = false;
+      stop?.();
+    };
   }, [enabled]);
   return s;
 }
@@ -37,7 +39,7 @@ export function GpsStatusText(s: GpsState): { text: string; tone: 'ok' | 'warn' 
     case 'weak':
       return { text: `GPS ungenau · ±${s.acc} m`, tone: 'warn' };
     case 'denied':
-      return { text: 'Standortzugriff verweigert – in den iOS-Einstellungen für Safari erlauben', tone: 'bad' };
+      return { text: 'Standortzugriff verweigert – in den iOS-Einstellungen erlauben', tone: 'bad' };
     case 'unavailable':
       return { text: s.msg, tone: 'bad' };
     default:
